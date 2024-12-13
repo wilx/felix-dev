@@ -9,3 +9,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "maven"
+    directories:
+      - "/pom"
+      - "/log"
+      - "/scr"
+      - "/http/base"
+      - "/http/jetty12"
+      - "/tools/maven-bundle-plugin"
+    schedule:
+      interval: "weekly"
