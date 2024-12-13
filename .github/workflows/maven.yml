@@ -3,15 +3,9 @@ name: Github CI Build
 on:
   push:
     branches: [ "**" ]
-    paths:
-      - 'scr/**'
-      - 'log/**'
   pull_request:
     branches: [ "**" ]
-    paths:
-      - 'scr/**'
-      - 'log/**'
-    
+
 permissions: {}
 
 jobs:
