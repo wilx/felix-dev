@@ -2,12 +2,12 @@ name: Github CI Build
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "**" ]
     paths:
       - 'scr/**'
       - 'log/**'
   pull_request:
-    branches: [ "master" ]
+    branches: [ "**" ]
     paths:
       - 'scr/**'
       - 'log/**'
