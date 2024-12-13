@@ -5,10 +5,12 @@ on:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'log/**'
   pull_request:
     branches: [ "master" ]
     paths:
       - 'scr/**'
+      - 'log/**'
     
 permissions: {}
 
