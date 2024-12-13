@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+        Licensed to the Apache Software Foundation (ASF) under one or more contributor license
+        agreements. See the NOTICE file distributed with this work for additional information
+        regarding copyright ownership. The ASF licenses this file to you under the Apache License,
+        Version 2.0 (the "License"); you may not use this file except in compliance with the
+        License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing, software distributed under the
+        License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+        either express or implied. See the License for the specific language governing permissions
+        and limitations under the License.
+    -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.apache.felix</groupId>
+  <artifactId>felix-dev.root</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Felix Dev Root Directory</name>
+
+  <description>
+    This POM is not a parent to any component POM. It exists solely to have place to find all the component directories.
+  </description>
+
+  <modules>
+    <module>bundlerepository</module>
+    <module>bundlerepository.osgi-ct</module>
+    <module>cm.json</module>
+    <module>configadmin</module>
+    <module>configadmin-plugins/interpolation</module>
+    <module>configurator</module>
+    <module>connect</module>
+    <module>coordinator</module>
+    <module>dependencyma</module>
+    <module>eventadmin</module>
+    <module>examples</module>
+    <module>features</module>
+    <module>fileinstall</module>
+    <module>framework</module>
+    <module>framework.security</module>
+    <module>gogo</module>
+    <module>healthcheck/annotation</module>
+    <module>healthcheck/api</module>
+    <module>healthcheck/core</module>
+    <module>healthcheck/generalchecks</module>
+    <module>healthcheck/webconsoleplugin</module>
+    <module>http</module>
+    <module>inventory</module>
+    <module>ipojo</module>
+    <module>log</module>
+    <module>log.extension</module>
+    <module>main</module>
+    <module>main.distribution</module>
+    <module>metatype</module>
+    <module>pom</module>
+    <module>resolver</module>
+    <module>rootcause</module>
+    <module>scr</module>
+    <module>scr-ext-anno</module>
+    <module>systemready</module>
+    <module>tools/maven-bundle-plugin</module>
+    <module>tools/osgicheck-maven-plugin</module>
+    <module>utils</module>
+    <module>webconsole</module>
+    <module>webconsole-plugins/ds</module>
+    <module>webconsole-plugins/event</module>
+    <module>webconsole-plugins/memoryusage</module>
+    <module>webconsole-plugins/obr</module>
+    <module>webconsole-plugins/packageadmin</module>
+  </modules>
+</project>
