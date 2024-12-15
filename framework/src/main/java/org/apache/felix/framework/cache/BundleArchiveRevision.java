@@ -18,10 +18,10 @@
  */
 package org.apache.felix.framework.cache;
 
+import org.apache.felix.framework.Logger;
+
 import java.io.File;
 import java.util.Map;
-
-import org.apache.felix.framework.Logger;
 
 /**
  * <p>
@@ -42,7 +42,7 @@ import org.apache.felix.framework.Logger;
 public abstract class BundleArchiveRevision
 {
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<String, Object> m_configMap;
     private final File m_revisionRootDir;
     private final String m_location;
 
@@ -63,7 +63,7 @@ public abstract class BundleArchiveRevision
      * @param location the location string associated with the revision.
      * @throws Exception if any errors occur.
     **/
-    public BundleArchiveRevision(Logger logger, Map configMap, File revisionRootDir, String location)
+    public BundleArchiveRevision(Logger logger, Map<String, Object> configMap, File revisionRootDir, String location)
         throws Exception
     {
         m_logger = logger;
@@ -89,7 +89,7 @@ public abstract class BundleArchiveRevision
      * </p>
      * @return the configuration map for this revision.
     **/
-    public Map getConfig()
+    public Map<String, Object> getConfig()
     {
         return m_configMap;
     }

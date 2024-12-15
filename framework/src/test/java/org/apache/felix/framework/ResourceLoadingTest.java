@@ -18,6 +18,12 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.launch.Framework;
+import org.osgi.framework.wiring.BundleWiring;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,12 +42,6 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-
-import junit.framework.TestCase;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.launch.Framework;
-import org.osgi.framework.wiring.BundleWiring;
 
 public class ResourceLoadingTest extends TestCase
 {
@@ -61,7 +62,7 @@ public class ResourceLoadingTest extends TestCase
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -92,11 +93,11 @@ public class ResourceLoadingTest extends TestCase
             + "Import-Package: org.osgi.framework\n";
         File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
 
-        String name = "bla/ bli/@@€ ß&&????ßß &&$$\" \'##&&/ äöüß/ @@ foo#bar#baz ?a=a.txt?d=ä#dlksl";
+        String name = "bla/ bli/@@€ ß&&????ßß &&$$\" '##&&/ äöüß/ @@ foo#bar#baz ?a=a.txt?d=ä#dlksl";
         os.putNextEntry(new ZipEntry(name));
         os.write("This is a Test".getBytes());
         os.close();
@@ -146,7 +147,7 @@ public class ResourceLoadingTest extends TestCase
                 + "Import-Package: org.osgi.framework\n";
         File bundleFile = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(bundleFile), mf);
 
@@ -188,7 +189,7 @@ public class ResourceLoadingTest extends TestCase
         ByteArrayOutputStream embeddedJar1 = new ByteArrayOutputStream();
         ByteArrayOutputStream embeddedJar2 = new ByteArrayOutputStream();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(bmf.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream bundle1 = new JarOutputStream(new FileOutputStream(bundleFile), mf);
         JarOutputStream ej1 = new JarOutputStream(embeddedJar1, mf);
@@ -223,7 +224,7 @@ public class ResourceLoadingTest extends TestCase
     }
 
     ClassLoader createClassLoader(Bundle bundle) {
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         Collection<String> resources = bundle.adapt(BundleWiring.class).listResources("/", "*.jar", BundleWiring.LISTRESOURCES_LOCAL);
         for (String resource : resources) {
             urls.add(bundle.getResource(resource));

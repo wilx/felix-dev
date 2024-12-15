@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A bundle's authority to import or export a package.
@@ -150,7 +151,7 @@ public final class PackagePermission extends BasicPermission {
 	 * 
 	 * <p>
 	 * Package Permissions are granted over all possible versions of a package.
-	 * 
+	 * <p>
 	 * A bundle that needs to export a package must have the appropriate
 	 * {@code PackagePermission} for that package; similarly, a bundle that
 	 * needs to import a package must have the appropriate
@@ -460,7 +461,7 @@ public final class PackagePermission extends BasicPermission {
 
 	/**
 	 * Determines the equality of two {@code PackagePermission} objects.
-	 * 
+	 * <p>
 	 * This method checks that specified package has the same package name and
 	 * {@code PackagePermission} actions as this {@code PackagePermission}
 	 * object.
@@ -483,7 +484,7 @@ public final class PackagePermission extends BasicPermission {
 
 		PackagePermission pp = (PackagePermission) obj;
 
-		return (action_mask == pp.action_mask) && getName().equals(pp.getName()) && ((bundle == pp.bundle) || ((bundle != null) && bundle.equals(pp.bundle)));
+		return (action_mask == pp.action_mask) && getName().equals(pp.getName()) && (Objects.equals(bundle, pp.bundle));
 	}
 
 	/**
@@ -538,25 +539,22 @@ public final class PackagePermission extends BasicPermission {
 		if (result != null) {
 			return result;
 		}
-		final Map<String, Object> map = new HashMap<String, Object>(5);
+		final Map<String, Object> map = new HashMap<>(5);
 		map.put("package.name", getName());
 		if (bundle != null) {
-			AccessController.doPrivileged(new PrivilegedAction<Void>() {
-				@Override
-				public Void run() {
-					map.put("id", Long.valueOf(bundle.getBundleId()));
-					map.put("location", bundle.getLocation());
-					String name = bundle.getSymbolicName();
-					if (name != null) {
-						map.put("name", name);
-					}
-					SignerProperty signer = new SignerProperty(bundle);
-					if (signer.isBundleSigned()) {
-						map.put("signer", signer);
-					}
-					return null;
-				}
-			});
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                map.put("id", bundle.getBundleId());
+                map.put("location", bundle.getLocation());
+                String name = bundle.getSymbolicName();
+                if (name != null) {
+                    map.put("name", name);
+                }
+                SignerProperty signer = new SignerProperty(bundle);
+                if (signer.isBundleSigned()) {
+                    map.put("signer", signer);
+                }
+                return null;
+            });
 		}
 		return properties = map;
 	}
@@ -599,7 +597,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 * Create an empty PackagePermissions object.
 	 */
 	public PackagePermissionCollection() {
-		permissions = new HashMap<String, PackagePermission>();
+		permissions = new HashMap<>();
 		all_allowed = false;
 	}
 
@@ -635,7 +633,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 			if (f != null) {
 				pc = filterPermissions;
 				if (pc == null) {
-					filterPermissions = pc = new HashMap<String, PackagePermission>();
+					filterPermissions = pc = new HashMap<>();
 				}
 			} else {
 				pc = permissions;
@@ -751,7 +749,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 	 */
 	@Override
 	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
+		List<Permission> all = new ArrayList<>(permissions.values());
 		Map<String, PackagePermission> pc = filterPermissions;
 		if (pc != null) {
 			all.addAll(pc.values());
@@ -764,7 +762,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 			new ObjectStreamField("filterPermissions", HashMap.class)	};
 
 	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
-		Hashtable<String, PackagePermission> hashtable = new Hashtable<String, PackagePermission>(permissions);
+		Hashtable<String, PackagePermission> hashtable = new Hashtable<>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
@@ -776,7 +774,7 @@ final class PackagePermissionCollection extends PermissionCollection {
 		ObjectInputStream.GetField gfields = in.readFields();
 		@SuppressWarnings("unchecked")
 		Hashtable<String, PackagePermission> hashtable = (Hashtable<String, PackagePermission>) gfields.get("permissions", null);
-		permissions = new HashMap<String, PackagePermission>(hashtable);
+		permissions = new HashMap<>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 		@SuppressWarnings("unchecked")
 		HashMap<String, PackagePermission> fp = (HashMap<String, PackagePermission>) gfields.get("filterPermissions", null);

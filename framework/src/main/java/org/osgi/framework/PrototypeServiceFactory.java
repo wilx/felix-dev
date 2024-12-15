@@ -97,7 +97,7 @@ public interface PrototypeServiceFactory<S> extends ServiceFactory<S> {
 	 * @see ServiceObjects#getService()
 	 */
 	@Override
-	public S getService(Bundle bundle, ServiceRegistration<S> registration);
+    S getService(Bundle bundle, ServiceRegistration<S> registration);
 
 	/**
 	 * Releases a service object customized for a caller.
@@ -122,5 +122,5 @@ public interface PrototypeServiceFactory<S> extends ServiceFactory<S> {
 	 * @see ServiceObjects#ungetService(Object)
 	 */
 	@Override
-	public void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
+    void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
 }

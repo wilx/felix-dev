@@ -46,7 +46,7 @@ import java.util.zip.ZipEntry;
 **/
 class JarRevision extends BundleArchiveRevision
 {
-    private static final transient String BUNDLE_JAR_FILE = "bundle.jar";
+    private static final String BUNDLE_JAR_FILE = "bundle.jar";
 
     private final WeakZipFileFactory m_zipFactory;
     private final File m_bundleFile;
@@ -100,9 +100,7 @@ class JarRevision extends BundleArchiveRevision
         // Read and parse headers into a case insensitive map of manifest attributes and return it.
         ZipEntry manifestEntry = m_zipFile.getEntry("META-INF/MANIFEST.MF");
 
-        Map<String, Object> manifest = manifestEntry != null ? BundleCache.getMainAttributes(new StringMap(), m_zipFile.getInputStream(manifestEntry), manifestEntry.getSize()) : null;
-
-        return manifest;
+        return manifestEntry != null ? BundleCache.getMainAttributes(new StringMap(), m_zipFile.getInputStream(manifestEntry), manifestEntry.getSize()) : null;
     }
 
     public Content getContent() throws Exception
@@ -152,7 +150,7 @@ class JarRevision extends BundleArchiveRevision
                             // Support for http proxy authentication.
                             String auth = BundleCache.getSecureAction()
                                 .getSystemProperty("http.proxyAuth", null);
-                            if ((auth != null) && (auth.length() > 0))
+                            if ((auth != null) && (!auth.isEmpty()))
                             {
                                 if ("http".equals(url.getProtocol()) ||
                                     "https".equals(url.getProtocol()))
@@ -173,7 +171,7 @@ class JarRevision extends BundleArchiveRevision
                     {
                         // This is a hack to fix an issue on Android, where
                         // HttpURLConnections are not properly closed. (FELIX-2728)
-                        if ((conn != null) && (conn instanceof HttpURLConnection))
+                        if ( conn instanceof HttpURLConnection )
                         {
                             ((HttpURLConnection) conn).disconnect();
                         }

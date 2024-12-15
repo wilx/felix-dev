@@ -70,7 +70,7 @@ public interface ListenerHook {
 	 * @ThreadSafe
 	 */
 	@ProviderType
-	public interface ListenerInfo {
+    interface ListenerInfo {
 		/**
 		 * Return the context of the bundle which added the listener.
 		 * 

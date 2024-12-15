@@ -38,8 +38,8 @@ import java.util.zip.ZipEntry;
 
 public class JarContent implements Content
 {
-    private static final transient String EMBEDDED_DIRECTORY = "-embedded";
-    private static final transient String LIBRARY_DIRECTORY = "-lib";
+    private static final String EMBEDDED_DIRECTORY = "-embedded";
+    private static final String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
     private final Map m_configMap;
@@ -49,7 +49,7 @@ public class JarContent implements Content
     private final File m_file;
     private final WeakZipFile m_zipFile;
     private final boolean m_isZipFileOwner;
-    private Map m_nativeLibMap;
+    private Map<String, Integer> m_nativeLibMap;
 
     public JarContent(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
         Object revisionLock, File rootDir, File file, WeakZipFile zipFile)
@@ -340,11 +340,11 @@ public class JarContent implements Content
                 // as part of the extracted path.
                 if (m_nativeLibMap == null)
                 {
-                    m_nativeLibMap = new HashMap();
+                    m_nativeLibMap = new HashMap<>();
                 }
-                Integer libCount = (Integer) m_nativeLibMap.get(entryName);
+                Integer libCount = m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
-                libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
+                libCount = (libCount == null) ? 0 : libCount + 1;
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
                     libDir, libCount.toString() + File.separatorChar + entryName);

@@ -16,10 +16,11 @@
 
 package org.osgi.service.url;
 
+import org.osgi.annotation.versioning.ConsumerType;
+
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
-import org.osgi.annotation.versioning.ConsumerType;
 
 /**
  * Service interface with public versions of the protected
@@ -43,8 +44,7 @@ public interface URLStreamHandlerService {
 	/**
 	 * @see "java.net.URLStreamHandler.openConnection"
 	 */
-	@SuppressWarnings("javadoc")
-	public URLConnection openConnection(URL u) throws java.io.IOException;
+    URLConnection openConnection(URL u) throws java.io.IOException;
 
 	/**
 	 * Parse a URL. This method is called by the {@code URLStreamHandler} proxy,
@@ -55,48 +55,40 @@ public interface URLStreamHandlerService {
 	 *        this URL.
 	 * @see "java.net.URLStreamHandler.parseURL"
 	 */
-	@SuppressWarnings("javadoc")
-	public void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit);
+    void parseURL(URLStreamHandlerSetter realHandler, URL u, String spec, int start, int limit);
 
 	/**
 	 * @see "java.net.URLStreamHandler.toExternalForm"
 	 */
-	@SuppressWarnings("javadoc")
-	public String toExternalForm(URL u);
+    String toExternalForm(URL u);
 
 	/**
 	 * @see "java.net.URLStreamHandler.equals(URL, URL)"
 	 */
-	@SuppressWarnings("javadoc")
-	public boolean equals(URL u1, URL u2);
+    boolean equals(URL u1, URL u2);
 
 	/**
 	 * @see "java.net.URLStreamHandler.getDefaultPort"
 	 */
-	@SuppressWarnings("javadoc")
-	public int getDefaultPort();
+    int getDefaultPort();
 
 	/**
 	 * @see "java.net.URLStreamHandler.getHostAddress"
 	 */
-	@SuppressWarnings("javadoc")
-	public InetAddress getHostAddress(URL u);
+    InetAddress getHostAddress(URL u);
 
 	/**
 	 * @see "java.net.URLStreamHandler.hashCode(URL)"
 	 */
-	@SuppressWarnings("javadoc")
-	public int hashCode(URL u);
+    int hashCode(URL u);
 
 	/**
 	 * @see "java.net.URLStreamHandler.hostsEqual"
 	 */
-	@SuppressWarnings("javadoc")
-	public boolean hostsEqual(URL u1, URL u2);
+    boolean hostsEqual(URL u1, URL u2);
 
 	/**
 	 * @see "java.net.URLStreamHandler.sameFile"
 	 */
-	@SuppressWarnings("javadoc")
-	public boolean sameFile(URL u1, URL u2);
+    boolean sameFile(URL u1, URL u2);
 }

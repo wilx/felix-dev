@@ -54,7 +54,7 @@ public abstract class DTO {
 	@Override
 	public String toString() {
 		return appendValue(new StringBuilder(),
-				new IdentityHashMap<Object,String>(), "#", this).toString();
+            new IdentityHashMap<>(), "#", this).toString();
 	}
 
 	/**
@@ -120,7 +120,7 @@ public abstract class DTO {
 			return appendString(result, compress(value.toString()));
 		}
 		if (value instanceof Number || value instanceof Boolean) {
-			return result.append(value.toString());
+			return result.append(value);
 		}
 		if (value instanceof Enum) {
 			return appendString(result, ((Enum< ? >) value).name());
@@ -282,12 +282,11 @@ public abstract class DTO {
 		if (length <= MAX_LENGTH) {
 			return in;
 		}
-		StringBuilder result = new StringBuilder(MAX_LENGTH)
-				.append(in, 0, MAX_LENGTH / 2 - 3)
-				.append('.')
-				.append('.')
-				.append('.')
-				.append(in, length - (MAX_LENGTH / 2), length);
-		return result;
+        return new StringBuilder(MAX_LENGTH)
+                .append(in, 0, MAX_LENGTH / 2 - 3)
+                .append('.')
+                .append('.')
+                .append('.')
+                .append(in, length - (MAX_LENGTH / 2), length);
 	}
 }

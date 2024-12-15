@@ -45,5 +45,5 @@ public interface BundleListener extends EventListener {
 	 * 
 	 * @param event The {@code BundleEvent}.
 	 */
-	public void bundleChanged(BundleEvent event);
+    void bundleChanged(BundleEvent event);
 }

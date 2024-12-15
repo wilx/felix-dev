@@ -142,7 +142,7 @@ public interface ConnectContent {
 	 * Represents the entry of a {@code ConnectContent}.
 	 */
 	@ConsumerType
-	public interface ConnectEntry {
+    interface ConnectEntry {
 		/**
 		 * Returns the path name of this entry.
 		 * 
@@ -156,7 +156,7 @@ public interface ConnectContent {
 		 * @return The content length of the entry, or {@code -1} if the content
 		 *         length is not known.
 		 */
-		public long getContentLength();
+        long getContentLength();
 
 		/**
 		 * Returns the last modification time of this entry.
@@ -164,7 +164,7 @@ public interface ConnectContent {
 		 * @return The last modification time of this entry measured in
 		 *         milliseconds since the epoch (00:00:00 GMT, January 1, 1970).
 		 */
-		public long getLastModified();
+        long getLastModified();
 
 		/**
 		 * Returns the content of this entry.

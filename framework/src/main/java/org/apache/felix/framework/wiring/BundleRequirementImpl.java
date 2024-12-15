@@ -18,11 +18,6 @@
  */
 package org.apache.felix.framework.wiring;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
@@ -30,6 +25,11 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleRevision;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class BundleRequirementImpl implements BundleRequirement
 {
@@ -71,13 +71,8 @@ public class BundleRequirementImpl implements BundleRequirement
         m_filter = filter;
 
         // Find resolution import directives.
-        boolean optional = false;
-        if (m_dirs.containsKey(Constants.RESOLUTION_DIRECTIVE)
-            && m_dirs.get(Constants.RESOLUTION_DIRECTIVE).equals(Constants.RESOLUTION_OPTIONAL))
-        {
-            optional = true;
-        }
-        m_optional = optional;
+        m_optional = m_dirs.containsKey(Constants.RESOLUTION_DIRECTIVE)
+            && m_dirs.get(Constants.RESOLUTION_DIRECTIVE).equals(Constants.RESOLUTION_OPTIONAL);
     }
 
     public BundleRequirementImpl(

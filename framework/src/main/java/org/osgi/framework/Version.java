@@ -248,7 +248,7 @@ public class Version implements Comparable<Version> {
 	 */
 	public static Version valueOf(String version) {
 		version = version.trim();
-		if (version.length() == 0) {
+		if ( version.isEmpty() ) {
 			return emptyVersion;
 		}
 

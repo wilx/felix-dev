@@ -18,20 +18,6 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleException;
@@ -40,6 +26,17 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 import org.osgi.framework.VersionRange;
+
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import static org.apache.felix.framework.VersionConverter.toOsgiVersion;
 
@@ -67,6 +64,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_8 = "windows8";
     private static final String OS_WINDOWS_9 = "windows9";
     private static final String OS_WINDOWS_10 = "windows10";
+    private static final String OS_WINDOWS_11 = "windows11";
     private static final String OS_WINDOWS_95 = "windows95";
     private static final String OS_WINDOWS_98 = "windows98";
     private static final String OS_WINDOWS_CE = "windowsce";
@@ -75,6 +73,7 @@ public class NativeLibraryClause
     private static final String OS_WINDOWS_SERVER_2012 = "windowsserver2012";
     private static final String OS_WINDOWS_SERVER_2016 = "windowsserver2016";
     private static final String OS_WINDOWS_SERVER_2019 = "windowsserver2019";
+    private static final String OS_WINDOWS_SERVER_2022 = "windowsserver2022";
     private static final String OS_WINDOWS_VISTA = "windowsvista";
     private static final String OS_WINDOWS_XP = "windowsxp";
     private static final String OS_WIN_32 = "win32";
@@ -93,9 +92,9 @@ public class NativeLibraryClause
     private static final String PROC_SPARC = "sparc";
 
 
-    private static final Map<String, List<String>> OS_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> OS_ALIASES = new HashMap<>();
 
-    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> PROC_ALIASES = new HashMap<>();
 
     private final String[] m_libraryEntries;
     private final String[] m_osnames;
@@ -151,7 +150,7 @@ public class NativeLibraryClause
             if(currentAliasesString != null)
             {
                 String[] aliases = currentAliasesString.split(",");
-                List<String> fullAliasList = new ArrayList<String>();
+                List<String> fullAliasList = new ArrayList<>();
                 //normalized name is always first.
                 fullAliasList.add(currentNormalizedName);
                 fullAliasList.addAll(Arrays.asList(aliases));
@@ -180,7 +179,7 @@ public class NativeLibraryClause
                 List<String> aliasList = aliasMap.get(currentNormalizedName);
                 if(aliasList == null)
                 {
-                    aliasMap.put(currentNormalizedName, new ArrayList<String>(Collections.singletonList(currentNormalizedName)));
+                    aliasMap.put(currentNormalizedName, new ArrayList<>(Collections.singletonList(currentNormalizedName)));
                 }
                 else
                 {
@@ -193,7 +192,7 @@ public class NativeLibraryClause
 
     private static Map<String, String> getAllKeysWithPrefix(String prefix, Map<String, String> configMap)
     {
-        Map<String, String> keysWithPrefix = new HashMap<String, String>();
+        Map<String, String> keysWithPrefix = new HashMap<>();
         for(Map.Entry<String, String> currentEntry: configMap.entrySet())
         {
             if(currentEntry.getKey().startsWith(prefix))
@@ -234,7 +233,7 @@ public class NativeLibraryClause
         return m_selectionFilter;
     }
 
-    public boolean match(Map configMap) throws BundleException
+    public boolean match(Map<String, Object> configMap) throws BundleException
     {
         String osName = (String) configMap.get(FelixConstants.FRAMEWORK_OS_NAME);
         String processorName = (String) configMap.get(FelixConstants.FRAMEWORK_PROCESSOR);
@@ -274,13 +273,8 @@ public class NativeLibraryClause
         }
 
         // Check library's selection-filter if specified.
-        if ((getSelectionFilter() != null) &&
-            !checkSelectionFilter(configMap, getSelectionFilter()))
-        {
-            return false;
-        }
-
-        return true;
+        return (getSelectionFilter() == null) ||
+            checkSelectionFilter(configMap, getSelectionFilter());
     }
 
     private boolean checkOSNames(String osName, String[] osnames)
@@ -351,15 +345,14 @@ public class NativeLibraryClause
         return false;
     }
 
-    private boolean checkSelectionFilter(Map configMap, String expr)
+    private boolean checkSelectionFilter(Map<String, Object> configMap, String expr)
         throws BundleException
     {
         // Get all framework properties
-        Dictionary dict = new Hashtable();
-        for (Iterator i = configMap.keySet().iterator(); i.hasNext(); )
+        Dictionary<String, Object> dict = new Hashtable<>();
+        for (Map.Entry<String, Object> e : configMap.entrySet())
         {
-            Object key = i.next();
-            dict.put(key, configMap.get(key));
+            dict.put(e.getKey(), e.getValue());
         }
         // Compute expression
         try
@@ -378,7 +371,7 @@ public class NativeLibraryClause
     {
         try
         {
-            if ((s == null) || (s.length() == 0))
+            if ((s == null) || (s.isEmpty()))
             {
                 return null;
             }
@@ -394,10 +387,10 @@ public class NativeLibraryClause
             // properties.
             StringTokenizer st = new StringTokenizer(s, ";");
             String[] libEntries = new String[st.countTokens()];
-            List osNameList = new ArrayList();
-            List osVersionList = new ArrayList();
-            List processorList = new ArrayList();
-            List languageList = new ArrayList();
+            List<String> osNameList = new ArrayList<>();
+            List<String> osVersionList = new ArrayList<>();
+            List<String> processorList = new ArrayList<>();
+            List<String> languageList = new ArrayList<>();
             String selectionFilter = null;
             int libCount = 0;
             while (st.hasMoreTokens())
@@ -429,8 +422,7 @@ public class NativeLibraryClause
                     {
                         property = (token.substring(0, token.indexOf("=")))
                             .trim().toLowerCase();
-                        value = (token.substring(token.indexOf("=") + 1, token
-                            .length())).trim();
+                        value = (token.substring(token.indexOf("=") + 1)).trim();
                     }
 
                     // Values may be quoted, so remove quotes if present.
@@ -455,26 +447,24 @@ public class NativeLibraryClause
                     }
 
                     // Add the value to its corresponding property list.
-                    if (property.equals(Constants.BUNDLE_NATIVECODE_OSNAME))
+                    switch (property)
                     {
-                        osNameList.add(value);
-                    }
-                    else if (property.equals(Constants.BUNDLE_NATIVECODE_OSVERSION))
-                    {
-                        osVersionList.add(normalizeOSVersionRange(value));
-                    }
-                    else if (property.equals(Constants.BUNDLE_NATIVECODE_PROCESSOR))
-                    {
-                        processorList.add(value);
-                    }
-                    else if (property.equals(Constants.BUNDLE_NATIVECODE_LANGUAGE))
-                    {
-                        languageList.add(value);
-                    }
-                    else if (property.equals(Constants.SELECTION_FILTER_ATTRIBUTE))
-                    {
-                        // TODO: NATIVE - I believe we can have multiple selection filters too.
-                        selectionFilter = value;
+                        case Constants.BUNDLE_NATIVECODE_OSNAME:
+                            osNameList.add(value);
+                            break;
+                        case Constants.BUNDLE_NATIVECODE_OSVERSION:
+                            osVersionList.add(normalizeOSVersionRange(value));
+                            break;
+                        case Constants.BUNDLE_NATIVECODE_PROCESSOR:
+                            processorList.add(value);
+                            break;
+                        case Constants.BUNDLE_NATIVECODE_LANGUAGE:
+                            languageList.add(value);
+                            break;
+                        case Constants.SELECTION_FILTER_ATTRIBUTE:
+                            // TODO: NATIVE - I believe we can have multiple selection filters too.
+                            selectionFilter = value;
+                            break;
                     }
                 }
             }
@@ -489,10 +479,10 @@ public class NativeLibraryClause
             System.arraycopy(libEntries, 0, actualLibEntries, 0, libCount);
             return new NativeLibraryClause(
                 actualLibEntries,
-                (String[]) osNameList.toArray(new String[osNameList.size()]),
-                (String[]) processorList.toArray(new String[processorList.size()]),
-                (String[]) osVersionList.toArray(new String[osVersionList.size()]),
-                (String[]) languageList.toArray(new String[languageList.size()]),
+                osNameList.toArray(new String[osNameList.size()]),
+                processorList.toArray(new String[processorList.size()]),
+                osVersionList.toArray(new String[osVersionList.size()]),
+                languageList.toArray(new String[languageList.size()]),
                 selectionFilter);
         }
         catch (RuntimeException ex)
@@ -546,77 +536,86 @@ public class NativeLibraryClause
         if (value.startsWith("win"))
         {
             String os = OS_WIN_32;
-            if (value.indexOf("32") >= 0 || value.indexOf("*") >= 0)
+            if ( value.contains("32") || value.contains("*") )
             {
                 os = OS_WIN_32;
             }
-            else if (value.indexOf("95") >= 0)
+            else if ( value.contains("95") )
             {
                 os = OS_WINDOWS_95;
             }
-            else if (value.indexOf("98") >= 0)
+            else if ( value.contains("98") )
             {
                 os = OS_WINDOWS_98;
             }
-            else if (value.indexOf("nt") >= 0)
+            else if ( value.contains("nt") )
             {
                 os = OS_WINDOWS_NT;
             }
-            else if (value.indexOf("2000") >= 0)
+            else if ( value.contains("2000") )
             {
                 os = OS_WINDOWS_2000;
             }
-            else if (value.indexOf("2003") >= 0)
+            else if ( value.contains("2003") )
             {
                 os = OS_WINDOWS_2003;
             }
-            else if (value.indexOf("2008") >= 0)
+            else if ( value.contains("2008") )
             {
                 os = OS_WINDOWS_SERVER_2008;
             }
-            else if (value.indexOf("2012") >= 0)
+            else if ( value.contains("2012") )
             {
                 os = OS_WINDOWS_SERVER_2012;
             }
-            else if (value.indexOf("2016") >= 0)
+            else if ( value.contains("2016") )
             {
                 os = OS_WINDOWS_SERVER_2016;
             }
-            else if (value.indexOf("2019") >= 0)
+            else if ( value.contains("2019") )
             {
                 os = OS_WINDOWS_SERVER_2019;
             }
-            else if (value.indexOf("xp") >= 0)
+            else if ( value.contains("2022") )
+            {
+                os = OS_WINDOWS_SERVER_2022;
+            }
+            else if ( value.contains("xp") )
             {
                 os = OS_WINDOWS_XP;
             }
-            else if (value.indexOf("ce") >= 0)
+            else if ( value.contains("ce") )
             {
                 os = OS_WINDOWS_CE;
             }
-            else if (value.indexOf("vista") >= 0)
+            else if ( value.contains("vista") )
             {
                 os = OS_WINDOWS_VISTA;
             }
-            else if ((value.indexOf(" 7") >= 0) || value.startsWith(OS_WINDOWS_7)
+            else if ((value.contains(" 7")) || value.startsWith(OS_WINDOWS_7)
                     || value.equals("win7"))
             {
                 os = OS_WINDOWS_7;
             }
-            else if ((value.indexOf(" 8") >= 0) || value.startsWith(OS_WINDOWS_8)
+            else if ((value.contains(" 8")) || value.startsWith(OS_WINDOWS_8)
                     || value.equals("win8"))
             {
                 os = OS_WINDOWS_8;
             }
-            else if ((value.indexOf(" 9") >= 0) || value.startsWith(OS_WINDOWS_9)
+            else if ((value.contains(" 9")) || value.startsWith(OS_WINDOWS_9)
                     || value.equals("win9"))
             {
                 os = OS_WINDOWS_9;
             }
-            else if ((value.indexOf(" 10") >= 0) || value.startsWith(OS_WINDOWS_10)
+            else if ((value.contains(" 10")) || value.startsWith(OS_WINDOWS_10)
                     || value.equals("win10"))
             {
                 os = OS_WINDOWS_10;
+            }
+            else if ((value.contains(" 11")) || value.startsWith(OS_WINDOWS_11)
+                || value.equals("win11"))
+            {
+                os = OS_WINDOWS_11;
             }
 
             return os;
@@ -761,7 +760,7 @@ public class NativeLibraryClause
             {
                 String s = value.substring(1, value.length() - 1);
                 String vlo = s.substring(0, s.indexOf(',')).trim();
-                String vhi = s.substring(s.indexOf(',') + 1, s.length()).trim();
+                String vhi = s.substring(s.indexOf(',') + 1).trim();
                 return new VersionRange(value.charAt(0), toOsgiVersion(vlo), toOsgiVersion(vhi),
                     value.charAt(value.length() - 1)).toString();
             }

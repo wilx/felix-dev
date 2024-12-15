@@ -47,7 +47,7 @@ public class BundleTrackerTest {
         BundleTrackerCustomizer<Bundle> customizer = mock(BundleTrackerCustomizer.class);
         when(customizer.addingBundle(Mockito.eq(bundle), Mockito.any(BundleEvent.class))).thenReturn(bundle);
         
-        BundleTracker<Bundle> tracker = new BundleTracker<Bundle>(context , Bundle.ACTIVE | Bundle.STARTING, customizer);
+        BundleTracker<Bundle> tracker = new BundleTracker<>(context, Bundle.ACTIVE | Bundle.STARTING, customizer);
         tracker.open();
         ArgumentCaptor<BundleListener> listenerCaptor = ArgumentCaptor.forClass(BundleListener.class);
         verify(context).addBundleListener(listenerCaptor.capture());

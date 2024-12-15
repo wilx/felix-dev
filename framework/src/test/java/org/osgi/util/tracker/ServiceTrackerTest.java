@@ -53,7 +53,7 @@ public class ServiceTrackerTest {
         String filterString = "(objectClass=java.lang.Runnable)";
         when(context.createFilter(Mockito.eq(filterString))).thenReturn(filter);
         
-        ServiceTracker<Runnable, Runnable> tracker = new ServiceTracker<Runnable, Runnable>(context, Runnable.class, customizer);
+        ServiceTracker<Runnable, Runnable> tracker = new ServiceTracker<>(context, Runnable.class, customizer);
         tracker.open();
 
         ArgumentCaptor<ServiceListener> listenerCaptor = ArgumentCaptor.forClass(ServiceListener.class);

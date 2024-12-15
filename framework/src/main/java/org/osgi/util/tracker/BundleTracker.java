@@ -16,14 +16,14 @@
 
 package org.osgi.util.tracker;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.SynchronousBundleListener;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The {@code BundleTracker} class simplifies tracking bundles much like the
@@ -191,9 +191,10 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 			}
 		}
 		if (bundles != null) {
-			for (int i = 0; i < bundles.length; i++) {
-				outgoing.untrack(bundles[i], null);
-			}
+            for (Bundle bundle : bundles)
+            {
+                outgoing.untrack(bundle, null);
+            }
 		}
 	}
 
@@ -314,7 +315,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 
 	/**
 	 * Remove a bundle from this {@code BundleTracker}.
-	 * 
+	 * <p>
 	 * The specified bundle will be removed from this {@code BundleTracker} . If
 	 * the specified bundle was being tracked then the
 	 * {@code BundleTrackerCustomizer.removedBundle} method will be called for
@@ -347,7 +348,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 
 	/**
 	 * Returns the tracking count for this {@code BundleTracker}.
-	 * 
+	 * <p>
 	 * The tracking count is initialized to 0 when this {@code BundleTracker} is
 	 * opened. Every time a bundle is added, modified or removed from this
 	 * {@code BundleTracker} the tracking count is incremented.
@@ -383,7 +384,7 @@ public class BundleTracker<T> implements BundleTrackerCustomizer<T> {
 	 * @since 1.5
 	 */
 	public Map<Bundle, T> getTracked() {
-		Map<Bundle, T> map = new HashMap<Bundle, T>();
+		Map<Bundle, T> map = new HashMap<>();
 		final Tracked t = tracked();
 		if (t == null) { /* if BundleTracker is not open */
 			return map;

@@ -16,12 +16,6 @@
 
 package org.osgi.util.tracker;
 
-import java.lang.reflect.Array;
-import java.util.Collections;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-
 import org.osgi.annotation.versioning.ConsumerType;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.BundleContext;
@@ -31,6 +25,12 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+
+import java.lang.reflect.Array;
+import java.util.Collections;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The {@code ServiceTracker} class simplifies using services from the
@@ -111,13 +111,13 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 
 	/**
 	 * Cached ServiceReference for getServiceReference.
-	 * 
+	 * <p>
 	 * This field is volatile since it is accessed by multiple threads.
 	 */
 	private volatile ServiceReference<S>	cachedReference;
 	/**
 	 * Cached service object for getService.
-	 * 
+	 * <p>
 	 * This field is volatile since it is accessed by multiple threads.
 	 */
 	private volatile T						cachedService;
@@ -183,7 +183,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		this.trackClass = clazz;
 		this.customizer = (customizer == null) ? this : customizer;
 		// we call clazz.toString to verify clazz is non-null!
-		this.listenerFilter = "(" + Constants.OBJECTCLASS + "=" + clazz.toString() + ")";
+		this.listenerFilter = "(" + Constants.OBJECTCLASS + "=" + clazz + ")";
 		try {
 			this.filter = context.createFilter(listenerFilter);
 		} catch (InvalidSyntaxException e) {
@@ -377,9 +377,10 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 			outgoing.notifyAll(); /* wake up any waiters */
 		}
 		if (references != null) {
-			for (int i = 0; i < references.length; i++) {
-				outgoing.untrack(references[i], null);
-			}
+            for (ServiceReference<S> reference : references)
+            {
+                outgoing.untrack(reference, null);
+            }
 		}
 		if (DEBUG) {
 			if ((cachedReference == null) && (cachedService == null)) {
@@ -501,7 +502,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 				return null;
 			}
 			synchronized (t) {
-				if (t.size() == 0) {
+				if ( t.isEmpty() ) {
 					t.wait(timeout);
 				}
 			}
@@ -576,12 +577,12 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 		}
 		int index = 0;
 		if (length > 1) { /* if more than one service, select highest ranking */
-			int rankings[] = new int[length];
+			int[] rankings = new int[length];
 			int count = 0;
 			int maxRanking = Integer.MIN_VALUE;
 			for (int i = 0; i < length; i++) {
 				Object property = references[i].getProperty(Constants.SERVICE_RANKING);
-				int ranking = (property instanceof Integer) ? ((Integer) property).intValue() : 0;
+				int ranking = (property instanceof Integer) ? (Integer) property : 0;
 				rankings[i] = ranking;
 				if (ranking > maxRanking) {
 					index = i;
@@ -597,7 +598,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 				long minId = Long.MAX_VALUE;
 				for (int i = 0; i < length; i++) {
 					if (rankings[i] == maxRanking) {
-						long id = ((Long) (references[i].getProperty(Constants.SERVICE_ID))).longValue();
+						long id = (Long) (references[i].getProperty(Constants.SERVICE_ID));
 						if (id < minId) {
 							index = i;
 							minId = id;
@@ -691,7 +692,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 
 	/**
 	 * Remove a service from this {@code ServiceTracker}.
-	 * 
+	 * <p>
 	 * The specified service will be removed from this {@code ServiceTracker}.
 	 * If the specified service was being tracked then the
 	 * {@code ServiceTrackerCustomizer.removedService} method will be called for
@@ -725,7 +726,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 
 	/**
 	 * Returns the tracking count for this {@code ServiceTracker}.
-	 * 
+	 * <p>
 	 * The tracking count is initialized to 0 when this {@code ServiceTracker}
 	 * is opened. Every time a service is added, modified or removed from this
 	 * {@code ServiceTracker}, the tracking count is incremented.
@@ -783,7 +784,7 @@ public class ServiceTracker<S, T> implements ServiceTrackerCustomizer<S, T> {
 	 * @since 1.5
 	 */
 	public SortedMap<ServiceReference<S>, T> getTracked() {
-		SortedMap<ServiceReference<S>, T> map = new TreeMap<ServiceReference<S>, T>(Collections.reverseOrder());
+		SortedMap<ServiceReference<S>, T> map = new TreeMap<>(Collections.reverseOrder());
 		final Tracked t = tracked();
 		if (t == null) { /* if ServiceTracker is not open */
 			return map;

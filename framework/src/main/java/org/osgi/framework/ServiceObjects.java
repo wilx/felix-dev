@@ -91,7 +91,7 @@ public interface ServiceObjects<S> {
 	 *             {@code ServiceObjects} object is no longer valid.
 	 * @see #ungetService(Object)
 	 */
-	public S getService();
+    S getService();
 
 	/**
 	 * Releases a service object for the {@link #getServiceReference()
@@ -131,7 +131,7 @@ public interface ServiceObjects<S> {
 	 *             object for the associated service.
 	 * @see #getService()
 	 */
-	public void ungetService(S service);
+    void ungetService(S service);
 
 	/**
 	 * Returns the {@link ServiceReference} for the service associated with this
@@ -140,5 +140,5 @@ public interface ServiceObjects<S> {
 	 * @return The {@link ServiceReference} for the service associated with this
 	 *         {@code ServiceObjects} object.
 	 */
-	public ServiceReference<S> getServiceReference();
+    ServiceReference<S> getServiceReference();
 }

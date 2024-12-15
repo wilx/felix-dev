@@ -18,6 +18,19 @@
  */
 package org.apache.felix.framework.security.util;
 
+import org.apache.felix.framework.util.SecureAction;
+import org.osgi.framework.AdminPermission;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.CapabilityPermission;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.PackagePermission;
+import org.osgi.framework.ServicePermission;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.packageadmin.ExportedPackage;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.permissionadmin.PermissionInfo;
+
 import java.io.File;
 import java.io.FilePermission;
 import java.lang.ref.ReferenceQueue;
@@ -36,19 +49,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.PropertyPermission;
 
-import org.apache.felix.framework.util.SecureAction;
-import org.osgi.framework.AdminPermission;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.CapabilityPermission;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.PackagePermission;
-import org.osgi.framework.ServicePermission;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.packageadmin.ExportedPackage;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.permissionadmin.PermissionInfo;
-
 /**
  * A permission cache that uses permission infos as keys. Permission are
  * created from the parent classloader or any exported package.
@@ -60,7 +60,7 @@ public final class Permissions
         .getClassLoader();
 
     private static final Map m_permissionCache = new HashMap();
-    private static final Map m_permissions = new HashMap();
+    private static final Map<Entry, Permissions> m_permissions = new HashMap<>();
     private static final ReferenceQueue m_permissionsQueue = new ReferenceQueue();
 
     private static final ThreadLocal m_stack = new ThreadLocal();
@@ -82,13 +82,13 @@ public final class Permissions
     {
         m_context = context;
         m_permissionInfos = permissionInfos;
-        m_cache = new HashMap();
-        m_queue = new ReferenceQueue();
+        m_cache = new HashMap<>();
+        m_queue = new ReferenceQueue<>();
         m_action = action;
-        for (int i = 0; i < m_permissionInfos.length; i++)
+        for (PermissionInfo mPermissionInfo : m_permissionInfos)
         {
-            if (m_permissionInfos[i].getType().equals(
-                AllPermission.class.getName()))
+            if ( mPermissionInfo.getType().equals(
+                AllPermission.class.getName()) )
             {
                 m_allPermission = true;
                 return;
@@ -267,7 +267,7 @@ public final class Permissions
         }
     }
 
-    private void cleanUp(ReferenceQueue queue, Map cache)
+    private void cleanUp(ReferenceQueue<Entry> queue, Map<Entry, Permissions> cache)
     {
         for (Entry entry = (Entry) queue.poll(); entry != null; entry = (Entry) queue
             .poll())
@@ -294,27 +294,27 @@ public final class Permissions
             return true;
         }
 
-        Class targetClass = target.getClass();
+        Class<?> targetClass = target.getClass();
 
         cleanUp(m_queue, m_cache);
 
         if ((bundle != null) && targetClass == FilePermission.class)
         {
-            for (int i = 0; i < m_permissionInfos.length; i++)
+            for (PermissionInfo mPermissionInfo : m_permissionInfos)
             {
-                if (m_permissionInfos[i].getType().equals(
-                    FilePermission.class.getName()))
+                if ( mPermissionInfo.getType().equals(
+                    FilePermission.class.getName()) )
                 {
                     String postfix = "";
-                    String name = m_permissionInfos[i].getName();
-                    if (!"<<ALL FILES>>".equals(name))
+                    String name = mPermissionInfo.getName();
+                    if ( !"<<ALL FILES>>".equals(name) )
                     {
-                        if (name.endsWith("*") || name.endsWith("-"))
+                        if ( name.endsWith("*") || name.endsWith("-") )
                         {
                             postfix = name.substring(name.length() - 1);
                             name = name.substring(0, name.length() - 1);
                         }
-                        if (!(new File(name)).isAbsolute())
+                        if ( !(new File(name)).isAbsolute() )
                         {
                             BundleContext context = (BundleContext) AccessController
                                 .doPrivileged(new PrivilegedAction()
@@ -324,16 +324,16 @@ public final class Permissions
                                         return bundle.getBundleContext();
                                     }
                                 });
-                            if (context == null)
+                            if ( context == null )
                             {
                                 break;
                             }
                             name = m_action.getAbsolutePath(new File(context
                                 .getDataFile(""), name));
                         }
-                        if (postfix.length() > 0)
+                        if ( !postfix.isEmpty() )
                         {
-                            if ((name.length() > 0) && !name.endsWith("/"))
+                            if ( (!name.isEmpty()) && !name.endsWith("/") )
                             {
                                 name += "/" + postfix;
                             }
@@ -345,8 +345,8 @@ public final class Permissions
                     }
                     Permission source = createPermission(new PermissionInfo(
                         FilePermission.class.getName(), name,
-                        m_permissionInfos[i].getActions()), targetClass);
-                    if (source.implies(target))
+                        mPermissionInfo.getActions()), targetClass);
+                    if ( source.implies(target) )
                     {
                         return true;
                     }
@@ -365,11 +365,12 @@ public final class Permissions
         {
             if (current instanceof HashSet)
             {
-                if (((HashSet) current).contains(targetClass))
+                final HashSet set = (HashSet) current;
+                if ( set.contains(targetClass))
                 {
                     return false;
                 }
-                ((HashSet) current).add(targetClass);
+                set.add(targetClass);
             }
             else
             {
@@ -613,15 +614,15 @@ public final class Permissions
             try
             {
                 return (Permission) m_action.getConstructor(target,
-                    new Class[] { String.class, String.class }).newInstance(
-                    new Object[] { name, action });
+                    String.class, String.class).newInstance(
+                     name, action );
             }
             // Fall-back to action-less constructor
             catch (NoSuchMethodException ex)
             {
                 return (Permission) m_action.getConstructor(target,
-                    new Class[] { String.class }).newInstance(
-                    new Object[] { name });
+                    String.class).newInstance(
+                     name );
             }
         }
         catch (Exception ex)

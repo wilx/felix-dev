@@ -67,7 +67,7 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 *         service or {@code null} if the specified referenced service
 	 *         should not be tracked.
 	 */
-	public T addingService(ServiceReference<S> reference);
+    T addingService(ServiceReference<S> reference);
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been modified.
@@ -79,7 +79,7 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * @param reference The reference to the service that has been modified.
 	 * @param service The service object for the specified referenced service.
 	 */
-	public void modifiedService(ServiceReference<S> reference, T service);
+    void modifiedService(ServiceReference<S> reference, T service);
 
 	/**
 	 * A service tracked by the {@code ServiceTracker} has been removed.
@@ -91,5 +91,5 @@ public interface ServiceTrackerCustomizer<S, T> {
 	 * @param reference The reference to the service that has been removed.
 	 * @param service The service object for the specified referenced service.
 	 */
-	public void removedService(ServiceReference<S> reference, T service);
+    void removedService(ServiceReference<S> reference, T service);
 }

@@ -74,7 +74,7 @@ public class InvalidSyntaxException extends Exception {
 	 * Return message string for super constructor.
 	 */
 	private static String message(String msg, String filter) {
-		if ((msg == null) || (filter == null) || msg.indexOf(filter) >= 0) {
+		if ((msg == null) || (filter == null) || msg.contains(filter) ) {
 			return msg;
 		}
 		return msg + ": " + filter;

@@ -18,13 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -41,6 +34,13 @@ import org.osgi.framework.ServicePermission;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
 
 class BundleContextImpl implements BundleContext
 {
@@ -70,7 +70,7 @@ class BundleContextImpl implements BundleContext
         // the result is the same as if the calling thread had
         // won the race condition.
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
@@ -81,7 +81,7 @@ class BundleContextImpl implements BundleContext
                 Constants.FRAMEWORK_OS_VERSION.equals(name) ||
                 Constants.FRAMEWORK_PROCESSOR.equals(name)))
             {
-                ((SecurityManager) sm).checkPermission(
+                sm.checkPermission(
                     new java.util.PropertyPermission(name, "read"));
             }
         }
@@ -132,14 +132,14 @@ class BundleContextImpl implements BundleContext
 
         Bundle result = null;
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             result = m_felix.installBundle(m_bundle, location, is);
             // Do check the bundle again in case that is was installed
             // already.
-            ((SecurityManager) sm).checkPermission(
+            sm.checkPermission(
                 new AdminPermission(result, AdminPermission.LIFECYCLE));
         }
         else
@@ -196,13 +196,13 @@ class BundleContextImpl implements BundleContext
         // while holding the event queue lock, so it will either succeed
         // or fail.
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             if (l instanceof SynchronousBundleListener)
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(m_bundle,
+                sm.checkPermission(new AdminPermission(m_bundle,
                     AdminPermission.LISTENER));
             }
         }
@@ -219,13 +219,13 @@ class BundleContextImpl implements BundleContext
         // the result is the same as if the calling thread had
         // won the race condition.
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             if (l instanceof SynchronousBundleListener)
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(m_bundle,
+                sm.checkPermission(new AdminPermission(m_bundle,
                     AdminPermission.LISTENER));
             }
         }
@@ -311,16 +311,16 @@ class BundleContextImpl implements BundleContext
         // because internally the framework acquires the bundle state
         // lock to ensure state consistency.
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             if (clazzes != null)
             {
-                for (int i = 0;i < clazzes.length;i++)
+                for (String clazz : clazzes)
                 {
-                    ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(clazzes[i], ServicePermission.REGISTER));
+                    sm.checkPermission(
+                        new ServicePermission(clazz, ServicePermission.REGISTER));
                 }
             }
         }
@@ -423,7 +423,7 @@ class BundleContextImpl implements BundleContext
             (ServiceReference<S>[]) getServiceReferences(clazz.getName(), filter);
         return (refs == null)
             ? Collections.EMPTY_LIST
-            : (Collection<ServiceReference<S>>) Arrays.asList(refs);
+            : Arrays.asList(refs);
     }
 
     public <S> S getService(ServiceReference<S> ref)
@@ -440,11 +440,11 @@ class BundleContextImpl implements BundleContext
             throw new NullPointerException("Specified service reference cannot be null.");
         }
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-           ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
+           sm.checkPermission(new ServicePermission(ref, ServicePermission.GET));
         }
 
         return m_felix.getService(m_bundle, ref, false);
@@ -508,18 +508,18 @@ class BundleContextImpl implements BundleContext
     {
     	checkValidity();
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-           ((SecurityManager) sm).checkPermission(new ServicePermission(ref, ServicePermission.GET));
+           sm.checkPermission(new ServicePermission(ref, ServicePermission.GET));
         }
 
-        ServiceRegistrationImpl reg =
-                ((ServiceRegistrationImpl.ServiceReferenceImpl) ref).getRegistration();
+        ServiceRegistrationImpl<S> reg =
+                ((ServiceRegistrationImpl<S>.ServiceReferenceImpl<S>) ref).getRegistration();
         if ( reg.isValid() )
         {
-        	return new ServiceObjectsImpl(ref);
+        	return new ServiceObjectsImpl<>(ref);
         }
         return null;
     }
@@ -544,11 +544,11 @@ class BundleContextImpl implements BundleContext
             // the result is the same as if the calling thread had
             // won the race condition.
 
-            final Object sm = System.getSecurityManager();
+            final SecurityManager sm = System.getSecurityManager();
 
             if (sm != null)
             {
-               ((SecurityManager) sm).checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
+               sm.checkPermission(new ServicePermission(m_ref, ServicePermission.GET));
             }
 
             return m_felix.getService(m_bundle, m_ref, true);

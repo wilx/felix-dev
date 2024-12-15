@@ -72,8 +72,8 @@ class BundleImpl implements Bundle, BundleRevisions
     private boolean m_useDeclaredActivationPolicy;
     private BundleActivator m_activator = null;
     private volatile BundleContext m_context = null;
-    private final Map m_cachedHeaders = new HashMap();
-    private Map m_uninstalledHeaders = null;
+    private final Map<String, Map<String, String>> m_cachedHeaders = new HashMap<>();
+    private Map<String, String> m_uninstalledHeaders = null;
     private long m_cachedHeadersTimestamp;
     private final Bundle m_installingBundle;
 
@@ -244,11 +244,11 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public BundleContext getBundleContext()
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-           ((SecurityManager) sm).checkPermission(
+           sm.checkPermission(
                new AdminPermission(this, AdminPermission.CONTEXT));
         }
 
@@ -281,13 +281,13 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public URL getEntry(String name)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+                sm.checkPermission(new AdminPermission(this,
                     AdminPermission.RESOURCE));
             }
             catch (Exception e)
@@ -302,13 +302,13 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public Enumeration getEntryPaths(String path)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+                sm.checkPermission(new AdminPermission(this,
                     AdminPermission.RESOURCE));
             }
             catch (Exception e)
@@ -323,13 +323,13 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public Enumeration findEntries(String path, String filePattern, boolean recurse)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+                sm.checkPermission(new AdminPermission(this,
                     AdminPermission.RESOURCE));
             }
             catch (Exception e)
@@ -343,19 +343,19 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Dictionary getHeaders()
+    public Dictionary<String, String> getHeaders()
     {
         return getHeaders(Locale.getDefault().toString());
     }
 
     @Override
-    public Dictionary getHeaders(String locale)
+    public Dictionary<String, String> getHeaders(String locale)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.METADATA));
         }
 
@@ -367,14 +367,14 @@ class BundleImpl implements Bundle, BundleRevisions
         return getFramework().getBundleHeaders(this, locale);
     }
 
-    Map getCurrentLocalizedHeader(String locale)
+    Map<String, String> getCurrentLocalizedHeader(String locale)
     {
-        Map result = null;
+        Map<String, String> result = null;
 
         // Spec says empty local returns raw headers.
-        if (locale.length() == 0)
+        if ( locale.isEmpty() )
         {
-            result = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
+            result = new StringMap<>(adapt(BundleRevisionImpl.class).getHeaders());
         }
 
         // If we have no result, try to get it from the cached headers.
@@ -400,7 +400,7 @@ class BundleImpl implements Bundle, BundleRevisions
                     // Check if headers for this locale have already been resolved
                     if (m_cachedHeaders.containsKey(locale))
                     {
-                        result = (Map) m_cachedHeaders.get(locale);
+                        result = m_cachedHeaders.get(locale);
                     }
                 }
             }
@@ -410,15 +410,15 @@ class BundleImpl implements Bundle, BundleRevisions
         if (result == null)
         {
             // Get a modifiable copy of the raw headers.
-            Map headers = new StringMap(adapt(BundleRevisionImpl.class).getHeaders());
+            Map<String, String> headers = new StringMap<>(adapt(BundleRevisionImpl.class).getHeaders());
             // Assume for now that this will be the result.
             result = headers;
 
             // Check to see if we actually need to localize anything
             boolean localize = false;
-            for (Iterator it = headers.values().iterator(); !localize && it.hasNext(); )
+            for (Iterator<String> it = headers.values().iterator(); !localize && it.hasNext(); )
             {
-                if (((String) it.next()).startsWith("%"))
+                if ( it.next().startsWith("%"))
                 {
                     localize = true;
                 }
@@ -433,7 +433,7 @@ class BundleImpl implements Bundle, BundleRevisions
             else
             {
                 // Do localization here and return the localized headers
-                String basename = (String) headers.get(Constants.BUNDLE_LOCALIZATION);
+                String basename = headers.get(Constants.BUNDLE_LOCALIZATION);
                 if (basename == null)
                 {
                     basename = Constants.BUNDLE_LOCALIZATION_DEFAULT_BASENAME;
@@ -482,16 +482,15 @@ class BundleImpl implements Bundle, BundleRevisions
                 else
                 {
                     // Resolve all localized header entries
-                    for (Iterator it = headers.entrySet().iterator(); it.hasNext(); )
+                    for (Map.Entry<String, String> entry : headers.entrySet())
                     {
-                        Map.Entry entry = (Map.Entry) it.next();
-                        String value = (String) entry.getValue();
-                        if (value.startsWith("%"))
+                        String value = entry.getValue();
+                        if ( value.startsWith("%") )
                         {
                             String newvalue;
                             String key = value.substring(value.indexOf("%") + 1);
                             newvalue = mergedProperties.getProperty(key);
-                            if (newvalue==null)
+                            if ( newvalue == null )
                             {
                                 newvalue = key;
                             }
@@ -507,7 +506,7 @@ class BundleImpl implements Bundle, BundleRevisions
         return result;
     }
 
-    private void updateHeaderCache(String locale, Map localizedHeaders)
+    private void updateHeaderCache(String locale, Map<String, String> localizedHeaders)
     {
         synchronized (m_cachedHeaders)
         {
@@ -533,7 +532,7 @@ class BundleImpl implements Bundle, BundleRevisions
             if (br.getWiring() != null)
             {
                 List<BundleWire> hostWires = br.getWiring().getRequiredWires(null);
-                if ((hostWires != null) && (hostWires.size() > 0))
+                if ((hostWires != null) && (!hostWires.isEmpty()))
                 {
                     br = hostWires.get(0).getProviderWiring().getRevision();
                     for (int hostIdx = 1; hostIdx < hostWires.size(); hostIdx++)
@@ -549,7 +548,7 @@ class BundleImpl implements Bundle, BundleRevisions
         }
 
         // Create a list of the revision and any attached fragment revisions.
-        List<BundleRevision> result = new ArrayList<BundleRevision>();
+        List<BundleRevision> result = new ArrayList<>();
         result.add(br);
         BundleWiring wiring = br.getWiring();
         if (wiring != null)
@@ -565,14 +564,14 @@ class BundleImpl implements Bundle, BundleRevisions
 
     private static List<String> createLocalizationResourceList(String basename, String locale)
     {
-        List<String> result = new ArrayList(4);
+        List<String> result = new ArrayList<>(4);
 
         StringTokenizer tokens;
         StringBuilder tempLocale = new StringBuilder(basename);
 
         result.add(tempLocale.toString());
 
-        if (locale.length() > 0)
+        if ( !locale.isEmpty() )
         {
             tokens = new StringTokenizer(locale, "_");
             while (tokens.hasMoreTokens())
@@ -621,11 +620,11 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public String getLocation()
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.METADATA));
         }
         return _getLocation();
@@ -656,13 +655,13 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public URL getResource(String name)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(
+                sm.checkPermission(
                     new AdminPermission(this, AdminPermission.RESOURCE));
             }
             catch (Exception e)
@@ -675,15 +674,15 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public Enumeration getResources(String name) throws IOException
+    public Enumeration<URL> getResources(String name) throws IOException
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(
+                sm.checkPermission(
                     new AdminPermission(this, AdminPermission.RESOURCE));
             }
             catch (Exception e)
@@ -694,7 +693,7 @@ class BundleImpl implements Bundle, BundleRevisions
 
         // Spec says we should return null when resources not found,
         // even though ClassLoader.getResources() returns empty enumeration.
-        Enumeration e = getFramework().getBundleResources(this, name);
+        Enumeration<URL> e = getFramework().getBundleResources(this, name);
         return ((e == null) || !e.hasMoreElements()) ? null : e;
     }
 
@@ -707,7 +706,7 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public ServiceReference[] getRegisteredServices()
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
@@ -718,16 +717,16 @@ class BundleImpl implements Bundle, BundleRevisions
                 return refs;
             }
 
-            List result = new ArrayList();
+            List<ServiceReference<?>> result = new ArrayList<>();
 
-            for (int i = 0; i < refs.length; i++)
+            for (ServiceReference<?> ref : refs)
             {
                 try
                 {
-                    ((SecurityManager) sm).checkPermission(new ServicePermission(
-                        refs[i], ServicePermission.GET));
+                    sm.checkPermission(new ServicePermission(
+                        ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
@@ -740,7 +739,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 return null;
             }
 
-            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
+            return result.toArray(new ServiceReference[result.size()]);
         }
         else
         {
@@ -749,29 +748,29 @@ class BundleImpl implements Bundle, BundleRevisions
     }
 
     @Override
-    public ServiceReference[] getServicesInUse()
+    public ServiceReference<?>[] getServicesInUse()
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ServiceReference[] refs = getFramework().getBundleServicesInUse(this);
+            ServiceReference<?>[] refs = getFramework().getBundleServicesInUse(this);
 
             if (refs == null)
             {
                 return refs;
             }
 
-            List result = new ArrayList();
+            List<ServiceReference<?>> result = new ArrayList<>();
 
-            for (int i = 0; i < refs.length; i++)
+            for (ServiceReference<?> ref : refs)
             {
                 try
                 {
-                    ((SecurityManager) sm).checkPermission(
-                        new ServicePermission(refs[i], ServicePermission.GET));
+                    sm.checkPermission(
+                        new ServicePermission(ref, ServicePermission.GET));
 
-                    result.add(refs[i]);
+                    result.add(ref);
                 }
                 catch (Exception ex)
                 {
@@ -784,7 +783,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 return null;
             }
 
-            return (ServiceReference[]) result.toArray(new ServiceReference[result.size()]);
+            return result.toArray(new ServiceReference[result.size()]);
         }
 
         return getFramework().getBundleServicesInUse(this);
@@ -968,13 +967,13 @@ class BundleImpl implements Bundle, BundleRevisions
             throw new ClassNotFoundException("Extension bundles cannot load classes.");
         }
 
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
             try
             {
-                ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+                sm.checkPermission(new AdminPermission(this,
                     AdminPermission.CLASS));
             }
             catch (Exception ex)
@@ -995,11 +994,11 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void start(int options) throws BundleException
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.EXECUTE));
         }
 
@@ -1015,11 +1014,11 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void update(InputStream is) throws BundleException
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.LIFECYCLE));
         }
 
@@ -1035,11 +1034,11 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void stop(int options) throws BundleException
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.EXECUTE));
         }
 
@@ -1049,15 +1048,15 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public void uninstall() throws BundleException
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(new AdminPermission(this,
+            sm.checkPermission(new AdminPermission(this,
                 AdminPermission.LIFECYCLE));
         }
 
-        Map headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
+        Map<String, String> headers = getCurrentLocalizedHeader(Locale.getDefault().toString());
 
         // Uninstall the bundle.
         getFramework().uninstallBundle(this);
@@ -1085,14 +1084,14 @@ class BundleImpl implements Bundle, BundleRevisions
 
     <A> void checkAdapt(Class<A> type)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
         if ((sm != null) && (getFramework().getSecurityProvider() != null))
         {
             Class[] classes = m_smEx.getClassContext();
             if (classes.length < 3 || ((Felix.m_secureAction.getClassLoader(classes[3]) != m_classloader) ||
                 !classes[3].getName().startsWith("org.apache.felix.framework.")))
             {
-                ((SecurityManager) sm).checkPermission(
+                sm.checkPermission(
                     new AdaptPermission(type.getName(), this, AdaptPermission.ADAPT));
             }
         }
@@ -1173,7 +1172,7 @@ class BundleImpl implements Bundle, BundleRevisions
     {
         long thisBundleId = this.getBundleId();
         long thatBundleId = t.getBundleId();
-        return (thisBundleId < thatBundleId ? -1 : (thisBundleId == thatBundleId ? 0 : 1));
+        return (Long.compare(thisBundleId, thatBundleId));
     }
 
     @Override
@@ -1205,7 +1204,7 @@ class BundleImpl implements Bundle, BundleRevisions
     @Override
     public synchronized List<BundleRevision> getRevisions()
     {
-        return new ArrayList<BundleRevision>(m_revisions);
+        return new ArrayList<>(m_revisions);
     }
 
     /**
@@ -1284,7 +1283,7 @@ class BundleImpl implements Bundle, BundleRevisions
         // Create the bundle revision instance.
         BundleRevisionImpl revision = new BundleRevisionImpl(
             this,
-            Long.toString(getBundleId())
+            getBundleId()
                 + "." + m_archive.getCurrentRevisionNumber().toString(),
             headerMap,
             m_archive.getCurrentRevision().getContent());
@@ -1303,11 +1302,11 @@ class BundleImpl implements Bundle, BundleRevisions
             bundleVersion = (bundleVersion == null) ? Version.emptyVersion : bundleVersion;
             String symName = revision.getSymbolicName();
 
-            List<Bundle> collisionCanditates = new ArrayList<Bundle>();
+            List<Bundle> collisionCanditates = new ArrayList<>();
             Bundle[] bundles = getFramework().getBundles();
             for (int i = 0; (bundles != null) && (i < bundles.length); i++)
             {
-                long id = ((BundleImpl) bundles[i]).getBundleId();
+                long id = bundles[i].getBundleId();
                 if (id != getBundleId())
                 {
                     if (symName.equals(bundles[i].getSymbolicName())
@@ -1322,7 +1321,7 @@ class BundleImpl implements Bundle, BundleRevisions
                 Set<ServiceReference<CollisionHook>> hooks = getFramework().getHookRegistry().getHooks(CollisionHook.class);
                 if (!hooks.isEmpty())
                 {
-                    Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<Bundle>(collisionCanditates);
+                    Collection<Bundle> shrinkableCollisionCandidates = new ShrinkableCollection<>(collisionCanditates);
                     for (ServiceReference<CollisionHook> hook : hooks)
                     {
                         CollisionHook ch = getFramework().getService(getFramework(), hook, false);

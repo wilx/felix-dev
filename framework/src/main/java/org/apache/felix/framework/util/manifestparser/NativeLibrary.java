@@ -18,10 +18,11 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
+import org.osgi.framework.Constants;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.osgi.framework.Constants;
 
 public class NativeLibrary
 {
@@ -86,11 +87,7 @@ public class NativeLibrary
     public boolean match(Map configMap, String name)
     {
         // First, check for an exact match.
-        boolean matched = false;
-        if (m_libraryFile.equals(name) || m_libraryFile.endsWith("/" + name))
-        {
-            matched = true;
-        }
+        boolean matched = m_libraryFile.equals(name) || m_libraryFile.endsWith("/" + name);
 
         // Then check the mapped name.
         String libname = System.mapLibraryName(name);
@@ -99,7 +96,7 @@ public class NativeLibrary
             (String) configMap.get(Constants.FRAMEWORK_LIBRARY_EXTENSIONS), ",");
         if (exts == null)
         {
-            exts = new ArrayList<String>();
+            exts = new ArrayList<>();
         }
         // For Mac OSX, try dylib too.
         if (libname.endsWith(".jnilib") && m_libraryFile.endsWith(".dylib"))

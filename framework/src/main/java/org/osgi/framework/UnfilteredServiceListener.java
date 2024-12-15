@@ -28,7 +28,7 @@ import org.osgi.framework.hooks.service.ListenerHook;
  * listener to receive all {@code ServiceEvent} objects while still advising
  * {@link ListenerHook} implementation of the service interests in the filter
  * string.
- * 
+ * <p>
  * For example, an implementation of Declarative Services would add an
  * {@code UnfilteredServiceListener} with a filter string listing all the
  * services referenced by all the service components. The Declarative Services

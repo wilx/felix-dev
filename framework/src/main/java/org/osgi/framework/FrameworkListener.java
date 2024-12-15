@@ -46,5 +46,5 @@ public interface FrameworkListener extends EventListener {
 	 * 
 	 * @param event The {@code FrameworkEvent} object.
 	 */
-	public void frameworkEvent(FrameworkEvent event);
+    void frameworkEvent(FrameworkEvent event);
 }

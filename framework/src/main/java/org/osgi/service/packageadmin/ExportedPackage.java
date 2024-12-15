@@ -21,7 +21,7 @@ import org.osgi.framework.Version;
 
 /**
  * An exported package.
- * 
+ * <p>
  * Objects implementing this interface are created by the Package Admin service.
  * 
  * <p>
@@ -34,7 +34,7 @@ import org.osgi.framework.Version;
  * An {@code ExportedPackage} object becomes stale if the package it
  * references has been updated or removed as a result of calling
  * {@code PackageAdmin.refreshPackages()}.
- * 
+ * <p>
  * If this object becomes stale, its {@code getName()} and
  * {@code getVersion()} methods continue to return their original values,
  * {@code isRemovalPending()} returns {@code true}, and
@@ -53,7 +53,7 @@ public interface ExportedPackage {
 	 * 
 	 * @return The name of this exported package.
 	 */
-	public String getName();
+    String getName();
 
 	/**
 	 * Returns the bundle exporting the package associated with this exported
@@ -62,7 +62,7 @@ public interface ExportedPackage {
 	 * @return The exporting bundle, or {@code null} if this
 	 *         {@code ExportedPackage} object has become stale.
 	 */
-	public Bundle getExportingBundle();
+    Bundle getExportingBundle();
 
 	/**
 	 * Returns the resolved bundles that are currently wired to this exported
@@ -78,7 +78,7 @@ public interface ExportedPackage {
 	 *         {@code ExportedPackage} object has become stale. The array
 	 *         will be empty if no bundles are wired to this exported package.
 	 */
-	public Bundle[] getImportingBundles();
+    Bundle[] getImportingBundles();
 
 	/**
 	 * Returns the version of this exported package.
@@ -87,7 +87,7 @@ public interface ExportedPackage {
 	 *         version information is available.
 	 * @deprecated As of 1.2. Replaced by {@link #getVersion()}.
 	 */
-	public String getSpecificationVersion();
+    String getSpecificationVersion();
 
 	/**
 	 * Returns the version of this exported package.
@@ -97,7 +97,7 @@ public interface ExportedPackage {
 	 *         available.
 	 * @since 1.2
 	 */
-	public Version getVersion();
+    Version getVersion();
 
 	/**
 	 * Returns {@code true} if the package associated with this
@@ -109,5 +109,5 @@ public interface ExportedPackage {
 	 *         {@code ExportedPackage} object has become stale;
 	 *         {@code false} otherwise.
 	 */
-	public boolean isRemovalPending();
+    boolean isRemovalPending();
 }

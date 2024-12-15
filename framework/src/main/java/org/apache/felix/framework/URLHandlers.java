@@ -18,6 +18,12 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.util.FelixConstants;
+import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.SecurityManagerEx;
+import org.osgi.framework.Constants;
+import org.osgi.service.url.URLStreamHandlerService;
+
 import java.lang.reflect.Method;
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
@@ -31,12 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.apache.felix.framework.util.Util.putIfAbsentAndReturn;
-
-import org.apache.felix.framework.util.FelixConstants;
-import org.apache.felix.framework.util.SecureAction;
-import org.apache.felix.framework.util.SecurityManagerEx;
-import org.osgi.framework.Constants;
-import org.osgi.service.url.URLStreamHandlerService;
 
 /**
  * <p>
@@ -90,15 +90,15 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
 
     // This maps classloaders of URLHandlers in other classloaders to lists of
     // their frameworks.
-    private final static ConcurrentHashMap<ClassLoader, List<Object>> m_classloaderToFrameworkLists = new ConcurrentHashMap<ClassLoader, List<Object>>();
+    private final static ConcurrentHashMap<ClassLoader, List<Object>> m_classloaderToFrameworkLists = new ConcurrentHashMap<>();
 
     // The list to hold all enabled frameworks registered with this handlers
-    private static final CopyOnWriteArrayList<Felix> m_frameworks = new CopyOnWriteArrayList<Felix>();
+    private static final CopyOnWriteArrayList<Felix> m_frameworks = new CopyOnWriteArrayList<>();
     private static volatile int m_counter = 0;
 
-    private static final ConcurrentHashMap<String, ContentHandler> m_contentHandlerCache = new ConcurrentHashMap<String, ContentHandler>();
-    private static final ConcurrentHashMap<String, URLStreamHandler> m_streamHandlerCache = new ConcurrentHashMap<String, URLStreamHandler>();
-    private static final ConcurrentHashMap<String, URL> m_protocolToURL = new ConcurrentHashMap<String, URL>();
+    private static final ConcurrentHashMap<String, ContentHandler> m_contentHandlerCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, URLStreamHandler> m_streamHandlerCache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, URL> m_protocolToURL = new ConcurrentHashMap<>();
 
     private static volatile URLStreamHandlerFactory m_streamHandlerFactory;
     private static volatile ContentHandlerFactory m_contentHandlerFactory;
@@ -107,13 +107,13 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
     private static volatile Object m_rootURLHandlers;
 
     private static final String m_streamPkgs;
-    private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<String, URLStreamHandler>();
+    private static final ConcurrentHashMap<String, URLStreamHandler> m_builtIn = new ConcurrentHashMap<>();
     private static final boolean m_loaded;
 
     static
     {
         String pkgs = new SecureAction().getSystemProperty(STREAM_HANDLER_PACKAGE_PROP, "");
-        m_streamPkgs = (pkgs.equals(""))
+        m_streamPkgs = (pkgs.isEmpty())
             ? DEFAULT_STREAM_HANDLER_PACKAGE
             : pkgs + "|" + DEFAULT_STREAM_HANDLER_PACKAGE;
         boolean loaded;
@@ -763,17 +763,17 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         // Find the first class that is loaded from a bundle.
         Class targetClass = null;
         ClassLoader targetClassLoader = null;
-        for (int i = 0; i < stack.length; i++)
+        for (Class aClass : stack)
         {
-            ClassLoader classLoader = m_secureAction.getClassLoader(stack[i]);
-			if (classLoader != null)
+            ClassLoader classLoader = m_secureAction.getClassLoader(aClass);
+            if ( classLoader != null )
             {
                 String name = classLoader.getClass().getName();
-                if (name.startsWith("org.apache.felix.framework.ModuleImpl$ModuleClassLoader")
+                if ( name.startsWith("org.apache.felix.framework.ModuleImpl$ModuleClassLoader")
                     || name.equals("org.apache.felix.framework.searchpolicy.ContentClassLoader")
-                    || name.startsWith("org.apache.felix.framework.BundleWiringImpl$BundleClassLoader"))
+                    || name.startsWith("org.apache.felix.framework.BundleWiringImpl$BundleClassLoader") )
                 {
-                    targetClass = stack[i];
+                    targetClass = aClass;
                     targetClassLoader = classLoader;
                     break;
                 }
@@ -787,7 +787,7 @@ class URLHandlers implements URLStreamHandlerFactory, ContentHandlerFactory
         {
             ClassLoader index = m_secureAction.getClassLoader(targetClassLoader.getClass());
 
-            List frameworks = (List) m_classloaderToFrameworkLists.get(index);
+            List frameworks = m_classloaderToFrameworkLists.get(index);
 
             if ((frameworks == null) && (index == URLHANDLERS_CLASS.getClassLoader()))
             {

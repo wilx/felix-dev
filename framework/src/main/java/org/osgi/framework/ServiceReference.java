@@ -73,7 +73,7 @@ public interface ServiceReference<S>
 	 * @return The property value to which the key is mapped; {@code null} if
 	 *         there is no property named after the key.
 	 */
-	public Object getProperty(String key);
+    Object getProperty(String key);
 
 	/**
 	 * Returns an array of the keys in the properties {@code Dictionary} object
@@ -94,7 +94,7 @@ public interface ServiceReference<S>
 	 * 
 	 * @return An array of property keys.
 	 */
-	public String[] getPropertyKeys();
+    String[] getPropertyKeys();
 
 	/**
 	 * Returns the bundle that registered the service referenced by this
@@ -111,7 +111,7 @@ public interface ServiceReference<S>
 	 * @see BundleContext#registerService(String[],Object,Dictionary)
 	 */
 	@Override
-	public Bundle getBundle();
+    Bundle getBundle();
 
 	/**
 	 * Returns the bundles that are using the service referenced by this
@@ -124,7 +124,7 @@ public interface ServiceReference<S>
 	 * 
 	 * @since 1.1
 	 */
-	public Bundle[] getUsingBundles();
+    Bundle[] getUsingBundles();
 
 	/**
 	 * Tests if the bundle that registered the service referenced by this
@@ -164,7 +164,7 @@ public interface ServiceReference<S>
 	 *             {@code ServiceReference}.
 	 * @since 1.3
 	 */
-	public boolean isAssignableTo(Bundle bundle, String className);
+    boolean isAssignableTo(Bundle bundle, String className);
 
 	/**
 	 * Compares this {@code ServiceReference} with the specified
@@ -193,7 +193,7 @@ public interface ServiceReference<S>
 	 * @since 1.4
 	 */
 	@Override
-	public int compareTo(Object reference);
+    int compareTo(Object reference);
 
 	/**
 	 * Returns a copy of the properties of the service referenced by this
@@ -223,7 +223,7 @@ public interface ServiceReference<S>
 	 *         {@code ServiceReference} object
 	 * @since 1.9
 	 */
-	public Dictionary<String,Object> getProperties();
+    Dictionary<String,Object> getProperties();
 
 	/**
 	 * Adapt this {@code ServiceReference} object to the specified type.

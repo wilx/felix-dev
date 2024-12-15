@@ -38,15 +38,11 @@ public class ServiceRegistrationImplTest extends TestCase
         sri.markCurrentThread();
         assertTrue(sri.currentThreadMarked());
 
-        final List<Throwable> exceptions = new ArrayList<Throwable>();
-        Thread t = new TestThread(exceptions, new Runnable() {
-            @Override
-            public void run()
-            {
-                assertFalse(sri.currentThreadMarked());
-                sri.markCurrentThread();
-                assertTrue(sri.currentThreadMarked());
-            }
+        final List<Throwable> exceptions = new ArrayList<>();
+        Thread t = new TestThread(exceptions, () -> {
+            assertFalse(sri.currentThreadMarked());
+            sri.markCurrentThread();
+            assertTrue(sri.currentThreadMarked());
         });
         t.start();
         t.join();
@@ -55,16 +51,12 @@ public class ServiceRegistrationImplTest extends TestCase
         sri.unmarkCurrentThread();
         assertFalse(sri.currentThreadMarked());
 
-        Thread t2 = new TestThread(exceptions, new Runnable() {
-            @Override
-            public void run()
-            {
-                assertFalse(sri.currentThreadMarked());
-                sri.markCurrentThread();
-                assertTrue(sri.currentThreadMarked());
-                sri.unmarkCurrentThread();
-                assertFalse(sri.currentThreadMarked());
-            }
+        Thread t2 = new TestThread(exceptions, () -> {
+            assertFalse(sri.currentThreadMarked());
+            sri.markCurrentThread();
+            assertTrue(sri.currentThreadMarked());
+            sri.unmarkCurrentThread();
+            assertFalse(sri.currentThreadMarked());
         });
         t2.start();
         t2.join();

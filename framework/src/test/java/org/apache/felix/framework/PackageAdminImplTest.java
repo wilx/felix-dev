@@ -18,10 +18,17 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.osgi.service.packageadmin.ExportedPackage;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,13 +36,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-
-import junit.framework.TestCase;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.ExportedPackage;
 
 public class PackageAdminImplTest extends TestCase
 {
@@ -56,7 +56,7 @@ public class PackageAdminImplTest extends TestCase
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -104,10 +104,9 @@ public class PackageAdminImplTest extends TestCase
             assertEquals(b, pa.getExportedPackage("org.foo.bundle").getExportingBundle());
             assertEquals(b, pa.getExportedPackage("org.foo.fragment").getExportingBundle());
 
-            Set<String> expected = new HashSet<String>();
-            expected.addAll(Arrays.asList("org.foo.bundle", "org.foo.fragment"));
+            Set<String> expected = new HashSet<>(Arrays.asList("org.foo.bundle", "org.foo.fragment"));
 
-            Set<String> actual = new HashSet<String>();
+            Set<String> actual = new HashSet<>();
             for (ExportedPackage ep : pa.getExportedPackages(b))
             {
                 actual.add(ep.getName());
@@ -138,7 +137,7 @@ public class PackageAdminImplTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("UTF-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
         os.close();

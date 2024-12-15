@@ -18,16 +18,7 @@
  */
 package org.apache.felix.framework.util.manifestparser;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import junit.framework.TestCase;
 import org.apache.felix.framework.BundleRevisionImpl;
 import org.apache.felix.framework.cache.ConnectContentContent;
 import org.apache.felix.framework.cache.Content;
@@ -43,15 +34,22 @@ import org.osgi.framework.namespace.IdentityNamespace;
 import org.osgi.framework.namespace.NativeNamespace;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleRequirement;
-import org.osgi.framework.wiring.BundleRevision;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ManifestParserTest extends TestCase
 {
     public void testIdentityCapabilityMinimal() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "foo.bar");
         ManifestParser mp = new ManifestParser(null, null, null, headers);
@@ -64,7 +62,7 @@ public class ManifestParserTest extends TestCase
 
     public void testIdentityCapabilityFull() throws BundleException
     {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, "abc;singleton:=true;foo=bar;" + IdentityNamespace.CAPABILITY_TAGS_ATTRIBUTE + "=test");
         headers.put(Constants.BUNDLE_VERSION, "1.2.3.something");
@@ -101,7 +99,7 @@ public class ManifestParserTest extends TestCase
     
     @SuppressWarnings("unchecked")
 	public void testNativeCapability() throws BundleException {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME, FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME);
         headers.put(Constants.PROVIDE_CAPABILITY, " osgi.native;" +
@@ -130,7 +128,7 @@ public class ManifestParserTest extends TestCase
     
     @SuppressWarnings("unchecked")
     public void testAttributes() throws BundleException {
-        Map<String, Object> headers = new HashMap<String, Object>();
+        Map<String, String> headers = new HashMap<>();
         headers.put(Constants.BUNDLE_MANIFESTVERSION,  "2");
         headers.put(Constants.BUNDLE_SYMBOLICNAME,"com.example.test.sample");
         headers.put(Constants.PROVIDE_CAPABILITY,
@@ -163,7 +161,7 @@ public class ManifestParserTest extends TestCase
     
     public void testConvertNativeCode() throws InvalidSyntaxException
     {
-        List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<NativeLibraryClause>();
+        List<NativeLibraryClause> nativeLibraryClauses = new ArrayList<>();
         String[] libraryFiles = {"lib/http.dll", "lib/zlib.dll"};
         String[] osNames = {"Windows95", "Windows98", "WindowsNT"};
         String[] processors = {"x86"};
@@ -181,7 +179,7 @@ public class ManifestParserTest extends TestCase
         
         BundleRequirement ir = findRequirement(nativeBundleReq, NativeNamespace.NATIVE_NAMESPACE);
         
-        String filterStr = (String)ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
+        String filterStr = ir.getDirectives().get(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE);
         
         Filter actualFilter = FrameworkUtil.createFilter(filterStr);
         

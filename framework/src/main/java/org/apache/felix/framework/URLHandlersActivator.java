@@ -18,15 +18,15 @@
  */
 package org.apache.felix.framework;
 
-import java.net.ContentHandler;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.felix.framework.util.FelixConstants;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.url.URLStreamHandlerService;
+
+import java.net.ContentHandler;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -57,10 +57,8 @@ class URLHandlersActivator implements BundleActivator
     {
         // Only register the framework with the URL Handlers service
         // if the service is enabled.
-        boolean enable = (m_configMap.get(
-                FelixConstants.SERVICE_URLHANDLERS_PROP) == null)
-                ? true
-                : !m_configMap.get(FelixConstants.SERVICE_URLHANDLERS_PROP).equals("false");
+        boolean enable = m_configMap.get(FelixConstants.SERVICE_URLHANDLERS_PROP) == null
+            || !m_configMap.get(FelixConstants.SERVICE_URLHANDLERS_PROP).equals("false");
 
         if (enable)
         {

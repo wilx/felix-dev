@@ -16,8 +16,9 @@
 
 package org.osgi.framework;
 
-import static java.util.Objects.requireNonNull;
+import org.osgi.framework.connect.FrameworkUtilHelper;
 
+import javax.security.auth.x500.X500Principal;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.AbstractMap;
@@ -34,9 +35,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 
-import javax.security.auth.x500.X500Principal;
-
-import org.osgi.framework.connect.FrameworkUtilHelper;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Framework Utility class.
@@ -226,8 +225,7 @@ public class FrameworkUtil {
 		// to call getClassLoader.
 		Optional<ClassLoader> cl = Optional
 				.ofNullable(AccessController.doPrivileged(
-						(PrivilegedAction<ClassLoader>) () -> classFromBundle
-								.getClassLoader()));
+						(PrivilegedAction<ClassLoader>) classFromBundle::getClassLoader));
 
 		return cl.flatMap(FrameworkUtil::getBundle)
 				.orElseGet(() -> helpers.stream()
@@ -373,7 +371,7 @@ public class FrameworkUtil {
 			if (pattern == null) {
 				throw new IllegalArgumentException("The pattern must not be null.");
 			}
-			List<Object> parsed = new ArrayList<Object>();
+			List<Object> parsed = new ArrayList<>();
 			final int length = pattern.length();
 			char c = ';'; // start with semi-colon to detect empty pattern
 			for (int startIndex = skipSpaces(pattern, 0); startIndex < length;) {
@@ -415,7 +413,7 @@ public class FrameworkUtil {
 				if (dn.equals(STAR_WILDCARD) || dn.equals(MINUS_WILDCARD)) {
 					continue;
 				}
-				List<Object> rdns = new ArrayList<Object>();
+				List<Object> rdns = new ArrayList<>();
 				if (dn.charAt(0) == '*') {
 					int index = skipSpaces(dn, 1);
 					if (dn.charAt(index) != ',') {
@@ -437,17 +435,17 @@ public class FrameworkUtil {
 			if (chain == null) {
 				throw new IllegalArgumentException("DN chain must not be null.");
 			}
-			List<Object> result = new ArrayList<Object>(chain.size());
+			List<Object> result = new ArrayList<>(chain.size());
 			// Now we parse is a list of strings, lets make List of rdn out
 			// of them
 			for (String dn : chain) {
 				dn = new X500Principal(dn).getName(X500Principal.CANONICAL);
 				// Now dn is a nice CANONICAL DN
-				List<Object> rdns = new ArrayList<Object>();
+				List<Object> rdns = new ArrayList<>();
 				parseDN(dn, rdns);
 				result.add(rdns);
 			}
-			if (result.size() == 0) {
+			if ( result.isEmpty() ) {
 				throw new IllegalArgumentException("empty DN chain");
 			}
 			return result;
@@ -475,7 +473,7 @@ public class FrameworkUtil {
 		private static void parseDN(String dn, List<Object> rdn) {
 			int startIndex = 0;
 			char c = '\0';
-			List<String> nameValues = new ArrayList<String>();
+			List<String> nameValues = new ArrayList<>();
 			while (startIndex < dn.length()) {
 				int endIndex;
 				for (endIndex = startIndex; endIndex < dn.length(); endIndex++) {
@@ -494,7 +492,7 @@ public class FrameworkUtil {
 				if (c != '+') {
 					rdn.add(nameValues);
 					if (endIndex != dn.length()) {
-						nameValues = new ArrayList<String>();
+						nameValues = new ArrayList<>();
 					} else {
 						nameValues = null;
 					}
@@ -562,7 +560,7 @@ public class FrameworkUtil {
 				if (dnChainPatternIndex >= dnChainPattern.size()) {
 					// return true iff the wild card is '-' or if we are at the
 					// end of the chain
-					return dnPattern.equals(MINUS_WILDCARD) ? true : dnChain.size() - 1 == dnChainIndex;
+					return dnPattern.equals(MINUS_WILDCARD) || dnChain.size() - 1 == dnChainIndex;
 				}
 				//
 				// we will now recursively call to see if the rest of the

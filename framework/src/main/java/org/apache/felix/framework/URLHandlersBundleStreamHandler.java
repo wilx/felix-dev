@@ -18,16 +18,18 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.net.*;
-import java.security.Permission;
-
 import org.apache.felix.framework.util.SecureAction;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
+import java.security.Permission;
 
 class URLHandlersBundleStreamHandler extends URLStreamHandler
 {
@@ -73,8 +75,8 @@ class URLHandlersBundleStreamHandler extends URLStreamHandler
                     URLHandlersBundleURLConnection.class.getName());
 
                 Constructor constructor = m_action.getConstructor(targetClass,
-                        new Class[]{URL.class, loader.loadClass(
-                                Felix.class.getName())});
+                    URL.class, loader.loadClass(
+                            Felix.class.getName()));
                 m_action.setAccesssible(constructor);
                 return (URLConnection) m_action.invoke(constructor, new Object[]{url, framework});
             }

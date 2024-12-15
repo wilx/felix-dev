@@ -46,5 +46,5 @@ public interface Configurable {
 	 *         permission and the Java Runtime Environment supports permissions.
 	 * @deprecated As of 1.2. Please use Configuration Admin service.
 	 */
-	public Object getConfigurationObject();
+    Object getConfigurationObject();
 }

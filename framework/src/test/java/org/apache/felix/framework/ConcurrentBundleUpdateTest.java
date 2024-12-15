@@ -18,21 +18,7 @@
  */
 package org.apache.felix.framework;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-
+import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -41,7 +27,19 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.SynchronousBundleListener;
 
-import junit.framework.TestCase;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 public class ConcurrentBundleUpdateTest extends TestCase 
 {
@@ -82,33 +80,23 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 final BundleImpl updater = (BundleImpl) felix.getBundleContext().installBundle(createBundle(mf, ConcurrentBundleUpdaterActivator.class).toURI().toURL().toString());
                 
                 final Semaphore step = new Semaphore(0);
-                SynchronousBundleListener listenerStarting = new SynchronousBundleListener() 
-                {
-                    
-                    @Override
-                    public void bundleChanged(BundleEvent event) 
+                SynchronousBundleListener listenerStarting = event -> {
+                    if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTING)
                     {
-                        if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTING)
-                        {
-                            step.release();
-                        }
+                        step.release();
                     }
                 };
                 felix.getBundleContext().addBundleListener(listenerStarting);
-                new Thread()
-                {
-                    public void run() 
+                new Thread(() -> {
+                    try
                     {
-                        try
-                        {
-                            updater.start();
-                        }
-                        catch (Exception ex) 
-                        {
-                            
-                        }
+                        updater.start();
                     }
-                }.start();
+                    catch (Exception ex)
+                    {
+
+                    }
+                }).start();
                 
                 assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
                 
@@ -117,35 +105,26 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 assertEquals(Bundle.STARTING, updater.getState());
                 assertEquals(0, step.availablePermits());
                 
-                new Thread() 
-                {
-                    public void run() 
+                new Thread(() -> {
+                    try
                     {
-                        try 
-                        {
-                            step.release();
-                            updater.update();
-                            step.release();
-                        }
-                        catch (Exception ex)
-                        {
-                        }
+                        step.release();
+                        updater.update();
+                        step.release();
                     }
-                }.start();
-                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
-                SynchronousBundleListener listenerStarted = new SynchronousBundleListener() 
-                {    
-                    @Override
-                    public void bundleChanged(BundleEvent event) 
+                    catch (Exception ex)
                     {
-                        if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTED)
-                        {
-                            step.release();
-                        }
-                        if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STOPPING)
-                        {
-                            step.release();
-                        }
+                    }
+                }).start();
+                assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
+                SynchronousBundleListener listenerStarted = event -> {
+                    if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTED)
+                    {
+                        step.release();
+                    }
+                    if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STOPPING)
+                    {
+                        step.release();
                     }
                 };
                 felix.getBundleContext().addBundleListener(listenerStarted);
@@ -240,32 +219,23 @@ public class ConcurrentBundleUpdateTest extends TestCase
                 final BundleImpl updater = (BundleImpl) felix.getBundleContext().installBundle(createBundle(mf, ConcurrentBundleUpdaterCycleActivator.class).toURI().toURL().toString());
                 
                 final Semaphore step = new Semaphore(0);
-                SynchronousBundleListener listenerStarting = new SynchronousBundleListener() 
-                {
-                    @Override
-                    public void bundleChanged(BundleEvent event) 
+                SynchronousBundleListener listenerStarting = event -> {
+                    if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTING)
                     {
-                        if (event.getBundle().equals(updater) && event.getType() == BundleEvent.STARTING)
-                        {
-                            step.release();
-                        }
+                        step.release();
                     }
                 };
                 felix.getBundleContext().addBundleListener(listenerStarting);
-                new Thread()
-                {
-                    public void run() 
+                new Thread(() -> {
+                    try
                     {
-                        try 
-                        {
-                            updater.start();
-                        } 
-                        catch (Exception ex)
-                        {
-                            step.release();
-                        }
+                        updater.start();
                     }
-                }.start();
+                    catch (Exception ex)
+                    {
+                        step.release();
+                    }
+                }).start();
                 
                 assertTrue(step.tryAcquire(1, TimeUnit.SECONDS));
                 
@@ -377,7 +347,7 @@ public class ConcurrentBundleUpdateTest extends TestCase
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
         for (Class clazz : classes)

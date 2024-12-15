@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -61,7 +62,7 @@ public class BundleCacheTest extends TestCase
         filesDir = new File(tempDir, "files");
         String cacheDirPath = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, Object> params = new HashMap<>();
         params.put("felix.cache.profiledir", cacheDirPath);
         params.put("felix.cache.dir", cacheDirPath);
         params.put(Constants.FRAMEWORK_STORAGE, cacheDirPath);
@@ -122,7 +123,7 @@ public class BundleCacheTest extends TestCase
 
         testNoZipSlip(archive);
 
-        archive = cache.create(1, 1, "reference:" + bundle.toURI().toURL().toString(), null, null);
+        archive = cache.create(1, 1, "reference:" + bundle.toURI().toURL(), null, null);
 
         testNoZipSlip(archive);
 
@@ -134,7 +135,7 @@ public class BundleCacheTest extends TestCase
         test.createNewFile();
         test.deleteOnExit();
 
-        archive = cache.create(1, 1, "reference:" + dir.toURI().toURL().toString(), null, null);
+        archive = cache.create(1, 1, "reference:" + dir.toURI().toURL(), null, null);
 
         testNoZipSlip(archive);
     }
@@ -164,7 +165,7 @@ public class BundleCacheTest extends TestCase
 
     public void testJarReference() throws Exception
     {
-       testBundle("reference:" + jarFile.toURI().toURL().toString(), null);
+       testBundle("reference:" + jarFile.toURI().toURL(), null);
     }
 
     public void testJar() throws Exception
@@ -228,19 +229,19 @@ public class BundleCacheTest extends TestCase
         assertNotNull(revision);
         assertNotNull(revision.getManifestHeader());
         assertEquals("bar", revision.getManifestHeader().get("foo"));
-        perRevision(revision.getContent(),  new TreeSet<String>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
-        perRevision(revision.getContent().getEntryAsContent("inner"),  new TreeSet<String>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
+        perRevision(revision.getContent(), new TreeSet<>(Arrays.asList("META-INF/", "META-INF/MANIFEST.MF", "file1", "inner/", "inner/empty/", "inner/file1", "inner/i+?äö \\§$%nner.jar")));
+        perRevision(revision.getContent().getEntryAsContent("inner"), new TreeSet<>(Arrays.asList("file1", "empty/", "i+?äö \\§$%nner.jar")));
         assertNull(revision.getContent().getEntryAsContent("inner/inner"));
         assertNotNull(revision.getContent().getEntryAsContent("inner/empty/"));
         assertNull(revision.getContent().getEntryAsContent("inner/empty").getEntries());
-        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<String>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
+        perRevision(revision.getContent().getEntryAsContent("inner/").getEntryAsContent("i+?äö \\§$%nner.jar"), new TreeSet<>(Arrays.asList("file1", "inner/", "inner/empty/", "inner/file1")));
     }
 
     private void perRevision(Content content, Set<String> expectedEntries) throws Exception
     {
         assertNotNull(content);
         Enumeration<String> entries =  content.getEntries();
-        Set<String> foundEntries = new TreeSet<String>();
+        Set<String> foundEntries = new TreeSet<>();
         while (entries.hasMoreElements())
         {
             foundEntries.add(entries.nextElement());
@@ -253,7 +254,7 @@ public class BundleCacheTest extends TestCase
 
         byte[] entry = content.getEntryAsBytes("file1");
         assertNotNull(entry);
-        assertEquals("file1", new String(entry, "UTF-8"));
+        assertEquals("file1", new String(entry, StandardCharsets.UTF_8));
         assertNull(content.getEntryAsBytes("foo"));
         assertNull(content.getEntryAsBytes("foo/bar"));
 
@@ -266,7 +267,7 @@ public class BundleCacheTest extends TestCase
         {
             entry[j++] = (byte) i;
         }
-        assertEquals("file1", new String(entry,  0 , j, "UTF-8"));
+        assertEquals("file1", new String(entry,  0 , j, StandardCharsets.UTF_8));
         assertNull(content.getEntryAsStream("foo"));
         assertNull(content.getEntryAsStream("foo/bar"));
 
@@ -280,7 +281,7 @@ public class BundleCacheTest extends TestCase
         {
             entry[j++] = (byte) i;
         }
-        assertEquals("file1", new String(entry,  0 , j, "UTF-8"));
+        assertEquals("file1", new String(entry,  0 , j, StandardCharsets.UTF_8));
         assertNull(content.getEntryAsURL("foo"));
         assertNull(content.getEntryAsURL("foo/bar"));
 
@@ -295,13 +296,13 @@ public class BundleCacheTest extends TestCase
     protected void tearDown() throws Exception {
         super.tearDown();
         cache.delete();
-        assertTrue(!cacheDir.exists());
+        assertFalse(cacheDir.exists());
         assertTrue(BundleCache.deleteDirectoryTree(tempDir));
     }
 
     private void createTestArchive(File archiveFile) throws Exception
     {
-        createFile(archiveFile, "file1", "file1".getBytes("UTF-8"));
+        createFile(archiveFile, "file1", "file1".getBytes(StandardCharsets.UTF_8));
     }
 
     private void createFile(File parent, String path, byte[] content) throws IOException
@@ -312,14 +313,9 @@ public class BundleCacheTest extends TestCase
 
         assertTrue(target.getParentFile().isDirectory());
 
-        FileOutputStream output = new FileOutputStream(target);
-        try
+        try (FileOutputStream output = new FileOutputStream(target))
         {
             output.write(content);
-        }
-        finally
-        {
-            output.close();
         }
     }
 

@@ -39,9 +39,9 @@ import java.util.Set;
  */
 public class ClassParser
 {
-    Map<String, TypeRef> typeRefCache = new HashMap<String, TypeRef>();
-    Map<String, Descriptor> descriptorCache = new HashMap<String, Descriptor>();
-    Map<String, PackageRef> packageCache = new HashMap<String, PackageRef>();
+    Map<String, TypeRef> typeRefCache = new HashMap<>();
+    Map<String, Descriptor> descriptorCache = new HashMap<>();
+    Map<String, PackageRef> packageCache = new HashMap<>();
 
     // MUST BE BEFORE PRIMITIVES, THEY USE THE DEFAULT PACKAGE!!
     final static PackageRef DEFAULT_PACKAGE = new PackageRef();
@@ -454,7 +454,7 @@ public class ClassParser
         {
             this.descriptor = descriptor;
             int index = 0;
-            List<TypeRef> types = new ArrayList<TypeRef>();
+            List<TypeRef> types = new ArrayList<>();
             if (descriptor.charAt(index) == '(')
             {
                 index++;
@@ -558,7 +558,7 @@ public class ClassParser
             }
         }
         String result = sb.toString();
-        assert result.length() > 0;
+        assert !result.isEmpty();
         return result;
     }
 
@@ -570,44 +570,24 @@ public class ClassParser
 
     TypeRef getTypeRefFromFQN(String fqn)
     {
-        if (fqn.equals("boolean"))
+        switch (fqn)
         {
-            return BOOLEAN;
-        }
-
-        if (fqn.equals("byte"))
-        {
-            return BOOLEAN;
-        }
-
-        if (fqn.equals("char"))
-        {
-            return CHAR;
-        }
-
-        if (fqn.equals("short"))
-        {
-            return SHORT;
-        }
-
-        if (fqn.equals("int"))
-        {
-            return INTEGER;
-        }
-
-        if (fqn.equals("long"))
-        {
-            return LONG;
-        }
-
-        if (fqn.equals("float"))
-        {
-            return FLOAT;
-        }
-
-        if (fqn.equals("double"))
-        {
-            return DOUBLE;
+            case "boolean":
+                return BOOLEAN;
+            case "byte":
+                return BYTE;
+            case "char":
+                return CHAR;
+            case "short":
+                return SHORT;
+            case "int":
+                return INTEGER;
+            case "long":
+                return LONG;
+            case "float":
+                return FLOAT;
+            case "double":
+                return DOUBLE;
         }
 
         return getTypeRef(fqnToBinary(fqn));
@@ -616,14 +596,9 @@ public class ClassParser
 
     public Set<String> parseClassFileUses(String path, InputStream in) throws Exception
     {
-        DataInputStream din = new DataInputStream(in);
-        try
+        try (DataInputStream din = new DataInputStream(in))
         {
             return new Clazz(this, path).parseClassFileData(din);
-        }
-        finally
-        {
-            din.close();
         }
     }
 
@@ -716,7 +691,7 @@ public class ClassParser
             }
         }
 
-        public abstract class Def
+        public abstract static class Def
         {
 
             final int access;
@@ -764,9 +739,9 @@ public class ClassParser
         int depth = 0;
 
         TypeRef className;
-        Object pool[];
-        int intPool[];
-        Set<String> imports = new HashSet<String>();
+        Object[] pool;
+        int[] intPool;
+        Set<String> imports = new HashSet<>();
         String path;
         int minor = 0;
         int major = 0;
@@ -918,7 +893,7 @@ public class ClassParser
                 if (o instanceof ClassConstant)
                 {
                     ClassConstant cc = (ClassConstant) o;
-                    if (cc.referred == false)
+                    if ( !cc.referred )
                     {
                         detectLdc = true;
                     }
@@ -1205,96 +1180,81 @@ public class ClassParser
             final int attribute_name_index = in.readUnsignedShort();
             final String attributeName = (String) pool[attribute_name_index];
             final long attribute_length = getUnsignedInt(in.readInt());
-            if (attributeName.equals("Deprecated"))
+            switch (attributeName)
             {
-            }
-            else if (attributeName.equals("RuntimeVisibleAnnotations"))
-            {
-                doAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                case "Deprecated":
+                    break;
+                case "RuntimeVisibleAnnotations":
+                    doAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("RuntimeInvisibleAnnotations"))
-            {
-                doAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                case "RuntimeInvisibleAnnotations":
+                    doAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("RuntimeVisibleParameterAnnotations"))
-            {
-                doParameterAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                case "RuntimeVisibleParameterAnnotations":
+                    doParameterAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("RuntimeInvisibleParameterAnnotations"))
-            {
-                doParameterAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                case "RuntimeInvisibleParameterAnnotations":
+                    doParameterAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("RuntimeVisibleTypeAnnotations"))
-            {
-                doTypeAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                case "RuntimeVisibleTypeAnnotations":
+                    doTypeAnnotations(in, member, RetentionPolicy.RUNTIME, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("RuntimeInvisibleTypeAnnotations"))
-            {
-                doTypeAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                case "RuntimeInvisibleTypeAnnotations":
+                    doTypeAnnotations(in, member, RetentionPolicy.CLASS, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("InnerClasses"))
-            {
-                doInnerClasses(in);
+                case "InnerClasses":
+                    doInnerClasses(in);
+                    break;
 
-            }
-            else if (attributeName.equals("EnclosingMethod"))
-            {
-                doEnclosingMethod(in);
+                case "EnclosingMethod":
+                    doEnclosingMethod(in);
+                    break;
 
-            }
-            else if (attributeName.equals("SourceFile"))
-            {
-                doSourceFile(in);
+                case "SourceFile":
+                    doSourceFile(in);
+                    break;
 
-            }
-            else if (attributeName.equals("Code"))
-            {
-                doCode(in, crawl);
+                case "Code":
+                    doCode(in, crawl);
+                    break;
 
-            }
-            else if (attributeName.equals("Signature"))
-            {
-                doSignature(in, member, access_flags);
+                case "Signature":
+                    doSignature(in, member, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("ConstantValue"))
-            {
-                doConstantValue(in);
+                case "ConstantValue":
+                    doConstantValue(in);
+                    break;
 
-            }
-            else if (attributeName.equals("AnnotationDefault"))
-            {
-                doElementValue(in, member, RetentionPolicy.RUNTIME, access_flags);
-            }
-            else if (attributeName.equals("Exceptions"))
-            {
-                doExceptions(in, access_flags);
+                case "AnnotationDefault":
+                    doElementValue(in, member, RetentionPolicy.RUNTIME, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("BootstrapMethods"))
-            {
-                doBootstrapMethods(in);
+                case "Exceptions":
+                    doExceptions(in, access_flags);
+                    break;
 
-            }
-            else if (attributeName.equals("StackMapTable"))
-            {
-                doStackMapTable(in);
+                case "BootstrapMethods":
+                    doBootstrapMethods(in);
+                    break;
 
-            }
-            else
-            {
-                if (attribute_length > 0x7FFFFFFF)
-                {
-                    throw new IllegalArgumentException("Attribute > 2Gb");
-                }
-                in.skipBytes((int) attribute_length);
+                case "StackMapTable":
+                    doStackMapTable(in);
+                    break;
 
+                default:
+                    if ( attribute_length > 0x7FFFFFFF )
+                    {
+                        throw new IllegalArgumentException("Attribute > 2Gb");
+                    }
+                    in.skipBytes((int) attribute_length);
+                    break;
             }
         }
 
@@ -1366,7 +1326,7 @@ public class ClassParser
             /* int max_locals = */
             in.readUnsignedShort();
             int code_length = in.readInt();
-            byte code[] = new byte[code_length];
+            byte[] code = new byte[code_length];
             in.readFully(code, 0, code_length);
             if (crawl)
             {
@@ -1745,7 +1705,7 @@ public class ClassParser
 
                 case 'Z': // Boolean
                     const_value_index = in.readUnsignedShort();
-                    return pool[const_value_index] == null || pool[const_value_index].equals(0) ? false : true;
+                    return pool[const_value_index] != null && !pool[const_value_index].equals(0);
 
                 case 'e': // enum constant
                     int type_name_index = in.readUnsignedShort();
@@ -2006,7 +1966,7 @@ public class ClassParser
             {
                 if ("+-*BCDFIJSZV".indexOf(c) < 0)
                 {
-                    ;// System.err.println("Should not skip: " + c);
+                    // System.err.println("Should not skip: " + c);
                 }
             }
 
@@ -2511,7 +2471,7 @@ public class ClassParser
         // branchbyte2,
 
 
-        final static byte OFFSETS[] = new byte[256];
+        final static byte[] OFFSETS = new byte[256];
 
         static
         {

@@ -136,7 +136,7 @@ public class VersionRange {
 		try {
 			StringTokenizer st = new StringTokenizer(range, LEFT_DELIMITERS, true);
 			String token = st.nextToken().trim(); // whitespace or left delim
-			if (token.length() == 0) { // leading whitespace
+			if ( token.isEmpty() ) { // leading whitespace
 				token = st.nextToken(); // left delim
 			}
 			closedLeft = LEFT_CLOSED_DELIMITER.equals(token);
@@ -165,7 +165,7 @@ public class VersionRange {
 
 			if (st.hasMoreTokens()) { // any more tokens have to be whitespace
 				token = st.nextToken("").trim();
-				if (token.length() != 0) { // trailing whitespace
+				if ( !token.isEmpty() ) { // trailing whitespace
 					throw new IllegalArgumentException("invalid range \"" + range + "\": invalid format");
 				}
 			}
@@ -465,7 +465,7 @@ public class VersionRange {
 	 * @see "Core Specification, Filters, for a description of the filter string syntax."
 	 */
 	public String toFilterString(String attributeName) {
-		if (attributeName.length() == 0) {
+		if ( attributeName.isEmpty() ) {
 			throw new IllegalArgumentException("invalid attributeName \"" + attributeName + "\"");
 		}
 		for (char ch : attributeName.toCharArray()) {

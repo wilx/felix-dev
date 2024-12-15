@@ -18,7 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.util.*;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -32,17 +31,17 @@ import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.packageadmin.RequiredBundle;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 
 public class PackageAdminImpl implements PackageAdmin
 {
-    private static final Comparator COMPARATOR = new Comparator() {
-        public int compare(Object o1, Object o2)
-        {
-            // Reverse arguments to sort in descending order.
-            return ((ExportedPackage) o2).getVersion().compareTo(
-                ((ExportedPackage) o1).getVersion());
-        }
-    };
+    private static final Comparator<ExportedPackage> COMPARATOR = Comparator.comparing(
+        ExportedPackage::getVersion, Comparator.reverseOrder());
 
     private Felix m_felix = null;
 
@@ -58,7 +57,7 @@ public class PackageAdminImpl implements PackageAdmin
      * @param clazz the class for which to determine its associated bundle.
      * @return the bundle associated with the specified class, otherwise null.
     **/
-    public Bundle getBundle(Class clazz)
+    public Bundle getBundle(Class<?> clazz)
     {
         return m_felix.getBundle(clazz);
     }
@@ -77,7 +76,7 @@ public class PackageAdminImpl implements PackageAdmin
     {
         VersionRange vr = (versionRange == null) ? null : new VersionRange(versionRange);
         Bundle[] bundles = m_felix.getBundles();
-        List list = new ArrayList();
+        List<Bundle> list = new ArrayList<>(5);
         for (int i = 0; (bundles != null) && (i < bundles.length); i++)
         {
             String sym = bundles[i].getSymbolicName();
@@ -94,23 +93,16 @@ public class PackageAdminImpl implements PackageAdmin
         {
             return null;
         }
-        bundles = (Bundle[]) list.toArray(new Bundle[list.size()]);
-        Arrays.sort(bundles,new Comparator() {
-            public int compare(Object o1, Object o2)
-            {
-                Version v1 = ((Bundle) o1).adapt(BundleRevision.class).getVersion();
-                Version v2 = ((Bundle) o2).adapt(BundleRevision.class).getVersion();
-                // Compare in reverse order to get descending sort.
-                return v2.compareTo(v1);
-            }
-        });
+        bundles = list.toArray(new Bundle[list.size()]);
+        Arrays.sort(bundles, Comparator.comparing(
+            b -> b.adapt(BundleRevision.class).getVersion(),
+            Comparator.reverseOrder()));
         return bundles;
     }
 
     public int getBundleType(Bundle bundle)
     {
-        Map headerMap = ((BundleRevisionImpl)
-            bundle.adapt(BundleRevisionImpl.class)).getHeaders();
+        Map<String, String> headerMap = (bundle.adapt(BundleRevisionImpl.class)).getHeaders();
         if (headerMap.containsKey(Constants.FRAGMENT_HOST))
         {
             return PackageAdmin.BUNDLE_TYPE_FRAGMENT;
@@ -163,33 +155,33 @@ public class PackageAdminImpl implements PackageAdmin
     public Bundle[] getFragments(Bundle bundle)
     {
         // If the bundle is not a fragment, then return its fragments.
-        if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) == 0)
+        if ( (getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0 )
         {
-            List<Bundle> list = new ArrayList<Bundle>();
-            // Iterate through revisions
-            for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
+            return null;
+        }
+        List<Bundle> list = new ArrayList<>();
+        // Iterate through revisions
+        for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
+        {
+            // Get attached fragments.
+            if (revision.getWiring() != null)
             {
-                // Get attached fragments.
-                if (revision.getWiring() != null)
+                List<BundleRevision> fragments =
+                    Util.getFragments(revision.getWiring());
+                for (BundleRevision fragment : fragments)
                 {
-                    List<BundleRevision> fragments =
-                        Util.getFragments(revision.getWiring());
-                    for (int i = 0; i < fragments.size(); i++)
+                    Bundle b = fragment.getBundle();
+                    if ( b != null )
                     {
-                        Bundle b = fragments.get(i).getBundle();
-                        if (b != null)
-                        {
-                            list.add(b);
-                        }
+                        list.add(b);
                     }
                 }
             }
-            // Convert list to an array.
-            return (list.isEmpty())
-                ? null
-                : (Bundle[]) list.toArray(new Bundle[list.size()]);
         }
-        return null;
+        // Convert list to an array.
+        return (list.isEmpty())
+            ? null
+            : list.toArray(new Bundle[list.size()]);
     }
 
     public Bundle[] getHosts(Bundle bundle)
@@ -197,7 +189,7 @@ public class PackageAdminImpl implements PackageAdmin
         // If the bundle is a fragment, return its hosts
         if ((getBundleType(bundle) & BUNDLE_TYPE_FRAGMENT) != 0)
         {
-            List<Bundle> list = new ArrayList<Bundle>();
+            List<Bundle> list = new ArrayList<>();
             // Iterate through revisions
             for (BundleRevision revision : bundle.adapt(BundleRevisions.class).getRevisions())
             {
@@ -222,14 +214,14 @@ public class PackageAdminImpl implements PackageAdmin
             // Convert list to an array.
             return (list.isEmpty())
                 ? null
-                : (Bundle[]) list.toArray(new Bundle[list.size()]);
+                : list.toArray(new Bundle[list.size()]);
         }
         return null;
     }
 
     public RequiredBundle[] getRequiredBundles(String symbolicName)
     {
-        List list = new ArrayList();
+        List<RequiredBundle> list = new ArrayList<>(5);
         for (Bundle bundle : m_felix.getBundles())
         {
             if ((symbolicName == null)
@@ -240,7 +232,7 @@ public class PackageAdminImpl implements PackageAdmin
         }
         return (list.isEmpty())
             ? null
-            : (RequiredBundle[]) list.toArray(new RequiredBundle[list.size()]);
+            : list.toArray(new RequiredBundle[list.size()]);
     }
 
     /**

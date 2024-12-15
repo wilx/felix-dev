@@ -18,6 +18,10 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.util.SecureAction;
+import org.osgi.service.url.URLStreamHandlerService;
+import org.osgi.service.url.URLStreamHandlerSetter;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -27,10 +31,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-
-import org.apache.felix.framework.util.SecureAction;
-import org.osgi.service.url.URLStreamHandlerService;
-import org.osgi.service.url.URLStreamHandlerSetter;
 
 /**
  * <p>
@@ -57,8 +57,8 @@ import org.osgi.service.url.URLStreamHandlerSetter;
 public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     implements URLStreamHandlerSetter, InvocationHandler
 {
-    private static final Class[] URL_PROXY_CLASS;
-    private static final Class[] STRING_TYPES = new Class[]{String.class};
+    private static final Class<?>[] URL_PROXY_CLASS;
+    private static final Class<?>[] STRING_TYPES = new Class[]{String.class};
     private static final Method EQUALS;
     private static final Method GET_DEFAULT_PORT;
     private static final Method GET_HOST_ADDRESS;
@@ -73,22 +73,20 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     {
         SecureAction action = new SecureAction();
 
-        EQUALS = reflect(action, "equals",
-            new Class[]{URL.class, URL.class});
-        GET_DEFAULT_PORT = reflect(action, "getDefaultPort",
-            (Class[]) null);
-        GET_HOST_ADDRESS = reflect(action, "getHostAddress", new Class[]{URL.class});
-        HASH_CODE = reflect(action, "hashCode", new Class[]{URL.class});
-        HOSTS_EQUAL = reflect(action, "hostsEqual", new Class[]{URL.class, URL.class});
-        OPEN_CONNECTION = reflect(action, "openConnection", new Class[]{URL.class});
-        SAME_FILE = reflect(action, "sameFile", new Class[]{URL.class, URL.class});
-        TO_EXTERNAL_FORM =reflect(action, "toExternalForm", new Class[]{URL.class});
+        EQUALS = reflect(action, "equals", URL.class, URL.class);
+        GET_DEFAULT_PORT = reflect(action, "getDefaultPort");
+        GET_HOST_ADDRESS = reflect(action, "getHostAddress", URL.class);
+        HASH_CODE = reflect(action, "hashCode", URL.class);
+        HOSTS_EQUAL = reflect(action, "hostsEqual", URL.class, URL.class);
+        OPEN_CONNECTION = reflect(action, "openConnection", URL.class);
+        SAME_FILE = reflect(action, "sameFile", URL.class, URL.class);
+        TO_EXTERNAL_FORM =reflect(action, "toExternalForm", URL.class);
 
         URL_PROXY_CLASS = new Class[]{URL.class, java.net.Proxy.class};
         OPEN_CONNECTION_PROXY = reflect(action, "openConnection", URL_PROXY_CLASS);
     }
 
-    private static Method reflect(SecureAction action, String name, Class... classes)
+    private static Method reflect(SecureAction action, String name, Class<?>... classes)
     {
         try
         {
@@ -139,6 +137,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     //
     // URLStreamHandler interface methods.
     //
+    @Override
     protected boolean equals(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
@@ -153,7 +152,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) EQUALS.invoke(svc, new Object[]{url1, url2})).booleanValue();
+            return (Boolean) EQUALS.invoke(svc, url1, url2);
         }
         catch (Exception ex)
         {
@@ -161,6 +160,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected int getDefaultPort()
     {
         Object svc = getStreamHandlerService();
@@ -174,7 +174,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Integer) GET_DEFAULT_PORT.invoke(svc, null)).intValue();
+            return (Integer) GET_DEFAULT_PORT.invoke(svc);
         }
         catch (Exception ex)
         {
@@ -182,6 +182,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected InetAddress getHostAddress(URL url)
     {
         Object svc = getStreamHandlerService();
@@ -196,7 +197,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return (InetAddress) GET_HOST_ADDRESS.invoke(svc, new Object[]{url});
+            return (InetAddress) GET_HOST_ADDRESS.invoke(svc, url);
         }
         catch (Exception ex)
         {
@@ -204,6 +205,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected int hashCode(URL url)
     {
         Object svc = getStreamHandlerService();
@@ -218,7 +220,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Integer) HASH_CODE.invoke(svc, new Object[]{url})).intValue();
+            return (Integer) HASH_CODE.invoke(svc, url);
         }
         catch (Exception ex)
         {
@@ -226,6 +228,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected boolean hostsEqual(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
@@ -240,7 +243,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) HOSTS_EQUAL.invoke(svc, new Object[]{url1, url2})).booleanValue();
+            return (Boolean) HOSTS_EQUAL.invoke(svc, url1, url2);
         }
         catch (Exception ex)
         {
@@ -248,6 +251,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected URLConnection openConnection(URL url) throws IOException
     {
         Object svc = getStreamHandlerService();
@@ -289,7 +293,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                     throw new IOException(ex.getMessage());
                 }
             }
-            return (URLConnection) OPEN_CONNECTION.invoke(svc, new Object[]{url});
+            return (URLConnection) OPEN_CONNECTION.invoke(svc, url);
         }
         catch (IOException ex)
         {
@@ -301,6 +305,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected URLConnection openConnection(URL url, java.net.Proxy proxy) throws IOException
     {
         Object svc = getStreamHandlerService();
@@ -324,27 +329,23 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             try
             {
                 m_action.setAccesssible(method);
-                return (URLConnection) method.invoke(svc, new Object[]{url, proxy});
+                return (URLConnection) method.invoke(svc, url, proxy);
+            }
+            catch (InvocationTargetException e)
+            {
+                throw new IOException(e.getCause());
             }
             catch (Exception e)
             {
-                if (e instanceof IOException)
-                {
-                    throw (IOException) e;
-                }
-                throw new IOException(e.getMessage(), e);
+                throw new IOException(e);
             }
         }
         try
         {
-            return (URLConnection) OPEN_CONNECTION_PROXY.invoke(svc, new Object[]{url, proxy});
+            return (URLConnection) OPEN_CONNECTION_PROXY.invoke(svc, url, proxy);
         }
         catch (Exception ex)
         {
-            if (ex instanceof IOException)
-            {
-                throw (IOException) ex;
-            }
             throw new IllegalStateException("Stream handler unavailable due to: " + ex.getMessage(), ex);
         }
     }
@@ -352,7 +353,9 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     // We use this thread local to detect whether we have a reentrant entry to the parseURL
     // method. This can happen do to some difference between gnu/classpath and sun jvms
     // For more see inside the method.
-    private static final ThreadLocal m_loopCheck = new ThreadLocal();
+    private static final ThreadLocal<Thread> m_loopCheck = new ThreadLocal<>();
+
+    @Override
     protected void parseURL(URL url, String spec, int start, int limit)
     {
         Object svc = getStreamHandlerService();
@@ -400,7 +403,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
                         }
                         finally
                         {
-                            m_loopCheck.set(null);
+                            m_loopCheck.remove();
                         }
                     }
                 }
@@ -422,6 +425,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     protected boolean sameFile(URL url1, URL url2)
     {
         Object svc = getStreamHandlerService();
@@ -436,8 +440,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
         try
         {
-            return ((Boolean) SAME_FILE.invoke(
-                svc, new Object[]{url1, url2})).booleanValue();
+            return (Boolean) SAME_FILE.invoke(svc, url1, url2);
         }
         catch (Exception ex)
         {
@@ -445,6 +448,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         }
     }
 
+    @Override
     public void setURL(
         URL url, String protocol, String host, int port, String authority,
         String userInfo, String path, String query, String ref)
@@ -452,12 +456,14 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         super.setURL(url, protocol, host, port, authority, userInfo, path, query, ref);
     }
 
+    @Override
     public void setURL(
         URL url, String protocol, String host, int port, String file, String ref)
     {
         super.setURL(url, protocol, host, port, file, ref);
     }
 
+    @Override
     protected String toExternalForm(URL url)
     {
         return toExternalForm(url, getStreamHandlerService());
@@ -478,8 +484,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
         {
             try
             {
-                String result = (String) TO_EXTERNAL_FORM.invoke(
-                    svc, new Object[]{url});
+                String result = (String) TO_EXTERNAL_FORM.invoke(svc, url);
 
                 // mika does return an invalid format if we have a url with the
                 // protocol only (<proto>://null) - we catch this case now
@@ -519,7 +524,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             answer.append(url.getProtocol());
             answer.append(':');
             String authority = url.getAuthority();
-            if ((authority != null) && (authority.length() > 0))
+            if ((authority != null) && (!authority.isEmpty()))
             {
                 answer.append("//"); //$NON-NLS-1$
                 answer.append(url.getAuthority());
@@ -586,7 +591,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
             }
             if (service instanceof URLStreamHandlerService)
             {
-                return (URLStreamHandlerService) service;
+                return service;
             }
             
             return m_action.createProxy(
@@ -614,7 +619,7 @@ public class URLHandlersStreamHandlerProxy extends URLStreamHandler
     public Object invoke(Object obj, Method method, Object[] params)
         throws Throwable
     {
-        Class[] types = method.getParameterTypes();
+        Class<?>[] types = method.getParameterTypes();
         if (m_service == null)
         {
             return m_action.invoke(m_action.getMethod(this.getClass(), method.getName(), types), this, params);

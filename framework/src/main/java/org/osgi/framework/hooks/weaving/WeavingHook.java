@@ -60,5 +60,5 @@ public interface WeavingHook {
 	 *             the class load in progress without being deny listed by the
 	 *             framework
 	 */
-	public void weave(WovenClass wovenClass);
+    void weave(WovenClass wovenClass);
 }

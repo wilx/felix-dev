@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -413,19 +414,22 @@ public final class ServicePermission extends BasicPermission {
 		/* requested permission created with ServiceReference */
 		if (wildcard) {
 			int pl = prefix.length();
-			for (int i = 0, l = requestedNames.length; i < l; i++) {
-				String requestedName = requestedNames[i];
-				if ((requestedName.length() > pl) && requestedName.startsWith(prefix)) {
-					return true;
-				}
-			}
+            for (String requestedName : requestedNames)
+            {
+                if ( (requestedName.length() > pl) && requestedName.startsWith(prefix) )
+                {
+                    return true;
+                }
+            }
 		} else {
 			String name = getName();
-			for (int i = 0, l = requestedNames.length; i < l; i++) {
-				if (requestedNames[i].equals(name)) {
-					return true;
-				}
-			}
+            for (String requestedName : requestedNames)
+            {
+                if ( requestedName.equals(name) )
+                {
+                    return true;
+                }
+            }
 		}
 		return false;
 	}
@@ -476,7 +480,7 @@ public final class ServicePermission extends BasicPermission {
 
 	/**
 	 * Determines the equality of two ServicePermission objects.
-	 * 
+	 * <p>
 	 * Checks that specified object has the same class name and action as this
 	 * {@code ServicePermission}.
 	 * 
@@ -552,29 +556,26 @@ public final class ServicePermission extends BasicPermission {
 			return result;
 		}
 		if (service == null) {
-			result = new HashMap<String, Object>(1);
+			result = new HashMap<>(1);
 			result.put(Constants.OBJECTCLASS, new String[] {getName()});
 			return properties = result;
 		}
-		final Map<String, Object> props = new HashMap<String, Object>(4);
+		final Map<String, Object> props = new HashMap<>(4);
 		final Bundle bundle = service.getBundle();
 		if (bundle != null) {
-			AccessController.doPrivileged(new PrivilegedAction<Void>() {
-				@Override
-				public Void run() {
-					props.put("id", Long.valueOf(bundle.getBundleId()));
-					props.put("location", bundle.getLocation());
-					String name = bundle.getSymbolicName();
-					if (name != null) {
-						props.put("name", name);
-					}
-					SignerProperty signer = new SignerProperty(bundle);
-					if (signer.isBundleSigned()) {
-						props.put("signer", signer);
-					}
-					return null;
-				}
-			});
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                props.put("id", bundle.getBundleId());
+                props.put("location", bundle.getLocation());
+                String name = bundle.getSymbolicName();
+                if (name != null) {
+                    props.put("name", name);
+                }
+                SignerProperty signer = new SignerProperty(bundle);
+                if (signer.isBundleSigned()) {
+                    props.put("signer", signer);
+                }
+                return null;
+            });
 		}
 		return properties = new Properties(props, service);
 	}
@@ -611,7 +612,7 @@ public final class ServicePermission extends BasicPermission {
 			if (entries != null) {
 				return entries;
 			}
-			Set<Map.Entry<String, Object>> all = new HashSet<Map.Entry<String, Object>>(properties.entrySet());
+			Set<Map.Entry<String, Object>> all = new HashSet<>(properties.entrySet());
 			add: for (String key : service.getPropertyKeys()) {
 				for (String k : properties.keySet()) {
 					if (key.equalsIgnoreCase(k)) {
@@ -667,11 +668,9 @@ public final class ServicePermission extends BasicPermission {
 				}
 				Map.Entry<?, ?> e = (Map.Entry<?, ?>) obj;
 				final Object key = e.getKey();
-				if ((k == key) || ((k != null) && k.equals(key))) {
+				if ( Objects.equals(k, key) ) {
 					final Object value = e.getValue();
-					if ((v == value) || ((v != null) && v.equals(value))) {
-						return true;
-					}
+                    return Objects.equals(v, value);
 				}
 				return false;
 			}
@@ -715,7 +714,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 * Creates an empty ServicePermissions object.
 	 */
 	public ServicePermissionCollection() {
-		permissions = new HashMap<String, ServicePermission>();
+		permissions = new HashMap<>();
 		all_allowed = false;
 	}
 
@@ -750,7 +749,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 			if (f != null) {
 				pc = filterPermissions;
 				if (pc == null) {
-					filterPermissions = pc = new HashMap<String, ServicePermission>();
+					filterPermissions = pc = new HashMap<>();
 				}
 			} else {
 				pc = permissions;
@@ -819,11 +818,13 @@ final class ServicePermissionCollection extends PermissionCollection {
 			}
 			/* requested permission created with ServiceReference */
 			else {
-				for (int i = 0, l = requestedNames.length; i < l; i++) {
-					if ((effective(requestedNames[i], desired, effective) & desired) == desired) {
-						return true;
-					}
-				}
+                for (String requestedName : requestedNames)
+                {
+                    if ( (effective(requestedName, desired, effective) & desired) == desired )
+                    {
+                        return true;
+                    }
+                }
 			}
 			Map<String, ServicePermission> pc = filterPermissions;
 			if (pc == null) {
@@ -892,7 +893,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 	 */
 	@Override
 	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
+		List<Permission> all = new ArrayList<>(permissions.values());
 		Map<String, ServicePermission> pc = filterPermissions;
 		if (pc != null) {
 			all.addAll(pc.values());
@@ -905,7 +906,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 			new ObjectStreamField("filterPermissions", HashMap.class)	};
 
 	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
-		Hashtable<String, ServicePermission> hashtable = new Hashtable<String, ServicePermission>(permissions);
+		Hashtable<String, ServicePermission> hashtable = new Hashtable<>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
@@ -917,7 +918,7 @@ final class ServicePermissionCollection extends PermissionCollection {
 		ObjectInputStream.GetField gfields = in.readFields();
 		@SuppressWarnings("unchecked")
 		Hashtable<String, ServicePermission> hashtable = (Hashtable<String, ServicePermission>) gfields.get("permissions", null);
-		permissions = new HashMap<String, ServicePermission>(hashtable);
+		permissions = new HashMap<>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 		@SuppressWarnings("unchecked")
 		HashMap<String, ServicePermission> fp = (HashMap<String, ServicePermission>) gfields.get("filterPermissions", null);

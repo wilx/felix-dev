@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -39,8 +38,8 @@ import java.util.Properties;
 public class DirectoryContent implements Content
 {
     private static final int BUFSIZE = 4096;
-    private static final transient String EMBEDDED_DIRECTORY = "-embedded";
-    private static final transient String LIBRARY_DIRECTORY = "-lib";
+    private static final String EMBEDDED_DIRECTORY = "-embedded";
+    private static final String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
     private final Map m_configMap;
@@ -48,7 +47,7 @@ public class DirectoryContent implements Content
     private final Object m_revisionLock;
     private final File m_rootDir;
     private final File m_dir;
-    private Map m_nativeLibMap;
+    private Map<String, Integer> m_nativeLibMap;
     private final String m_canonicalRoot;
 
     public DirectoryContent(Logger logger, Map configMap,
@@ -99,8 +98,7 @@ public class DirectoryContent implements Content
             return false;
         }
         return BundleCache.getSecureAction().fileExists(file)
-                && (name.endsWith("/")
-                ? BundleCache.getSecureAction().isFileDirectory(file) : true);
+                && (!name.endsWith("/") || BundleCache.getSecureAction().isFileDirectory(file));
     }
 
     @Override
@@ -174,7 +172,7 @@ public class DirectoryContent implements Content
 
     private String getName(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/')) {
+        if ((!name.isEmpty()) && (name.charAt(0) == '/')) {
             name = name.substring(1);
         }
         return name;
@@ -335,11 +333,11 @@ public class DirectoryContent implements Content
                 // as part of the extracted path.
                 if (m_nativeLibMap == null)
                 {
-                    m_nativeLibMap = new HashMap();
+                    m_nativeLibMap = new HashMap<>();
                 }
-                Integer libCount = (Integer) m_nativeLibMap.get(entryName);
+                Integer libCount = m_nativeLibMap.get(entryName);
                 // Either set or increment the library count.
-                libCount = (libCount == null) ? new Integer(0) : new Integer(libCount.intValue() + 1);
+                libCount = (libCount == null) ? 0 : libCount + 1;
                 m_nativeLibMap.put(entryName, libCount);
                 File libFile = new File(
                         libDir, libCount.toString() + File.separatorChar + entryName);
@@ -404,7 +402,7 @@ public class DirectoryContent implements Content
         return "DIRECTORY " + m_dir;
     }
 
-    private static class EntriesEnumeration implements Enumeration
+    private static class EntriesEnumeration implements Enumeration<String>
     {
         private final File m_dir;
         private final File[] m_children;
@@ -421,7 +419,7 @@ public class DirectoryContent implements Content
             return (m_children != null) && (m_counter < m_children.length);
         }
 
-        public synchronized Object nextElement()
+        public synchronized String nextElement()
         {
             if ((m_children == null) || (m_counter >= m_children.length))
             {
@@ -451,17 +449,17 @@ public class DirectoryContent implements Content
             File[] combined = children;
             if (children != null)
             {
-                for (int i = 0; i < children.length; i++)
+                for (File child : children)
                 {
-                    if (BundleCache.getSecureAction().isFileDirectory(children[i]))
+                    if ( BundleCache.getSecureAction().isFileDirectory(child) )
                     {
-                        File[] grandchildren = listFilesRecursive(children[i]);
-                        if (grandchildren != null && grandchildren.length > 0)
+                        File[] grandchildren = listFilesRecursive(child);
+                        if ( grandchildren != null && grandchildren.length > 0 )
                         {
                             File[] tmp = new File[combined.length + grandchildren.length];
                             System.arraycopy(combined, 0, tmp, 0, combined.length);
                             System.arraycopy(
-                                    grandchildren, 0, tmp, combined.length, grandchildren.length);
+                                grandchildren, 0, tmp, combined.length, grandchildren.length);
                             combined = tmp;
                         }
                     }

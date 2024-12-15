@@ -60,5 +60,5 @@ public interface ServiceListener extends EventListener {
 	 * 
 	 * @param event The {@code ServiceEvent} object.
 	 */
-	public void serviceChanged(ServiceEvent event);
+    void serviceChanged(ServiceEvent event);
 }

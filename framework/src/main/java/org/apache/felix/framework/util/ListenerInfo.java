@@ -18,11 +18,13 @@
  */
 package org.apache.felix.framework.util;
 
-import java.util.EventListener;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
 import org.osgi.framework.hooks.service.ListenerHook;
+
+import java.util.EventListener;
+import java.util.Objects;
 
 
 public class ListenerInfo implements ListenerHook.ListenerInfo
@@ -124,7 +126,7 @@ public class ListenerInfo implements ListenerHook.ListenerInfo
             && (other.m_context == m_context)
             && (other.m_listenerClass == m_listenerClass)
             && (other.m_listener == m_listener)
-            && (m_filter == null ? other.m_filter == null : m_filter.equals(other.m_filter));
+            && (Objects.equals(m_filter, other.m_filter));
     }
 
     @Override

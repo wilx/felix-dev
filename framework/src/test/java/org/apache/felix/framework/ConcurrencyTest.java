@@ -18,8 +18,17 @@
  */
 package org.apache.felix.framework;
 
-import static java.lang.System.err;
-import static java.lang.System.out;
+import junit.framework.Assert;
+import junit.framework.TestCase;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.launch.Framework;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,18 +42,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.Filter;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.launch.Framework;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import static java.lang.System.err;
+import static java.lang.System.out;
 
 /**
  * This test performs concurrent registration of service components that have dependencies between each other.
@@ -77,7 +76,7 @@ public class ConcurrencyTest extends TestCase
      */
     public void testConcurrentComponents() throws Exception
     {
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0," + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0," + "org.osgi.util.tracker; version=1.3.3,"
@@ -126,7 +125,7 @@ public class ConcurrencyTest extends TestCase
     /**
      * A simple component, that creates a service tracker on another component and registers in the osgi service registry.
      */
-    public class Component implements ServiceTrackerCustomizer<Component, Component>
+    public static class Component implements ServiceTrackerCustomizer<Component, Component>
     {
         private final BundleContext m_ctx;
         private final int m_id;
@@ -162,7 +161,7 @@ public class ConcurrencyTest extends TestCase
                     e.printStackTrace();
                     return;
                 }
-                m_tracker = new ServiceTracker<Component, Component>(m_ctx, filter, this);
+                m_tracker = new ServiceTracker<>(m_ctx, filter, this);
                 m_tracker.open();
             }
             else
@@ -220,7 +219,7 @@ public class ConcurrencyTest extends TestCase
         }
         
         private void register() {
-            Hashtable<String, Object> properties = new Hashtable<String, Object>();
+            Hashtable<String, Object> properties = new Hashtable<>();
             properties.put("id", String.valueOf(m_id));
             m_registration = m_ctx.registerService(Component.class.getName(), this, properties);
         }
@@ -278,7 +277,7 @@ public class ConcurrencyTest extends TestCase
         private void createComponentsConcurrently(int iteration) throws Exception
         {
             // Create components.
-            final List<Component> components = new ArrayList<Component>();
+            final List<Component> components = new ArrayList<>();
             for (int i = 0; i < COMPONENTS; i++)
             {
                 components.add(createComponents(iteration, i));
@@ -289,20 +288,16 @@ public class ConcurrencyTest extends TestCase
             for (int i = 0; i < COMPONENTS; i++)
             {
                 final Component component = components.get(i);
-                TPOOL.execute(new Runnable()
-                {
-                    public void run()
+                TPOOL.execute(() -> {
+                    try
                     {
-                        try
-                        {
-                            component.start();
-                        }
-                        finally
-                        {
-                            latch.countDown();
-                        }
-
+                        component.start();
                     }
+                    finally
+                    {
+                        latch.countDown();
+                    }
+
                 });
             }
 
@@ -326,7 +321,7 @@ public class ConcurrencyTest extends TestCase
                         out.println("Component #" + i + " unsatisfied.");
                     }
                 }
-                Assert.fail("Found unsatisfied components: " + String.valueOf(COMPONENTS - satisfied));
+                Assert.fail("Found unsatisfied components: " + (COMPONENTS - satisfied));
                 return;
             }            
 

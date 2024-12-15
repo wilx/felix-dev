@@ -21,7 +21,6 @@ package org.apache.felix.framework;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,15 +45,10 @@ public class CollisionHookTest extends TestCase
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
         BundleImpl originatingBundle = mockBundleImpl(4L, "xyz", "1.0.0");
 
-        CollisionHook testCollisionHook = new CollisionHook()
-        {
-            @Override
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+        CollisionHook testCollisionHook = (operationType, target, collisionCandidates) -> {
+            if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING))
             {
-                if ((target.getBundleId() == 4L) && (operationType == CollisionHook.INSTALLING))
-                {
-                    collisionCandidates.clear();
-                }
+                collisionCandidates.clear();
             }
         };
 
@@ -75,7 +69,7 @@ public class CollisionHookTest extends TestCase
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<String, Object>();
+        Map<String, Object> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -108,22 +102,17 @@ public class CollisionHookTest extends TestCase
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "foo", "1.2.1");
 
-        CollisionHook testCollisionHook = new CollisionHook()
-        {
-            @Override
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+        CollisionHook testCollisionHook = (operationType, target, collisionCandidates) -> {
+            if ((target.getBundleId() == 3L) && (operationType == CollisionHook.UPDATING))
             {
-                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.UPDATING))
-                {
-                    collisionCandidates.clear();
-                }
+                collisionCandidates.clear();
             }
         };
 
         @SuppressWarnings("unchecked")
         ServiceReference<CollisionHook> chRef = Mockito.mock(ServiceReference.class);
 
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, Object> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MANAGED);
 
         // Mock the framework
@@ -141,7 +130,7 @@ public class CollisionHookTest extends TestCase
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<String, Object>();
+        Map<String, Object> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "zar");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -167,22 +156,17 @@ public class CollisionHookTest extends TestCase
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
 
-        CollisionHook testCollisionHook = new CollisionHook()
-        {
-            @Override
-            public void filterCollisions(int operationType, Bundle target, Collection<Bundle> collisionCandidates)
+        CollisionHook testCollisionHook = (operationType, target, collisionCandidates) -> {
+            if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING))
             {
-                if ((target.getBundleId() == 3L) && (operationType == CollisionHook.INSTALLING))
-                {
-                    collisionCandidates.clear();
-                }
+                collisionCandidates.clear();
             }
         };
 
         @SuppressWarnings("unchecked")
         ServiceReference<CollisionHook> chRef = Mockito.mock(ServiceReference.class);
 
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, Object> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_SINGLE);
 
         // Mock the framework
@@ -200,7 +184,7 @@ public class CollisionHookTest extends TestCase
         Mockito.when(felixMock.getService(felixMock, chRef, false)).thenReturn(testCollisionHook);
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<String, Object>();
+        Map<String, Object> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -229,7 +213,7 @@ public class CollisionHookTest extends TestCase
         BundleImpl identicalBundle = mockBundleImpl(1L, "foo", "1.2.1.a");
         BundleImpl differentBundle = mockBundleImpl(2L, "bar", "1.2.1.a");
 
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, Object> config = new HashMap<>();
         config.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
 
         // Mock the framework
@@ -243,7 +227,7 @@ public class CollisionHookTest extends TestCase
         });
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<String, Object>();
+        Map<String, Object> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");
@@ -276,7 +260,7 @@ public class CollisionHookTest extends TestCase
         });
 
         // Mock the archive of the bundle being installed
-        Map<String, Object> headerMap = new HashMap<String, Object>();
+        Map<String, Object> headerMap = new HashMap<>();
         headerMap.put(Constants.BUNDLE_SYMBOLICNAME, "foo");
         headerMap.put(Constants.BUNDLE_VERSION, "1.2.1.a");
         headerMap.put(Constants.BUNDLE_MANIFESTVERSION, "2");

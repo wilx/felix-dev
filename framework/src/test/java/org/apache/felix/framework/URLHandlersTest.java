@@ -15,28 +15,6 @@
  */
 package org.apache.felix.framework;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ContentHandler;
-import java.net.InetAddress;
-import java.net.JarURLConnection;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLConnection;
-import java.security.Permission;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 import junit.framework.TestCase;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
@@ -47,6 +25,26 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
 import org.osgi.service.url.URLStreamHandlerSetter;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.ContentHandler;
+import java.net.InetAddress;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.security.Permission;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 /**
  *
@@ -438,7 +436,7 @@ public class URLHandlersTest extends TestCase
             File f = File.createTempFile("felix-bundle", ".jar");
             f.deleteOnExit();
 
-            Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+            Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
             JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
             for (Class clazz : classes)
@@ -479,7 +477,7 @@ public class URLHandlersTest extends TestCase
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
         for (Class clazz : classes)

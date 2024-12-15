@@ -18,20 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +34,21 @@ import org.osgi.framework.startlevel.dto.BundleStartLevelDTO;
 import org.osgi.framework.wiring.dto.BundleRevisionDTO;
 import org.osgi.framework.wiring.dto.BundleWiringDTO;
 import org.osgi.resource.dto.CapabilityDTO;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class DTOFactoryTest
 {
@@ -69,7 +70,7 @@ public class DTOFactoryTest
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -280,7 +281,7 @@ public class DTOFactoryTest
     {
         File f = File.createTempFile("felix-bundle" + counter++, ".jar", testDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 

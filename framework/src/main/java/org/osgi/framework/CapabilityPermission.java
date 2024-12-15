@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -184,7 +185,7 @@ public final class CapabilityPermission extends BasicPermission {
 		if (providingBundle == null) {
 			throw new IllegalArgumentException("bundle must not be null");
 		}
-		this.attributes = new HashMap<String, Object>(attributes);
+		this.attributes = new HashMap<>(attributes);
 		this.bundle = providingBundle;
 		if ((action_mask & ACTION_ALL) != ACTION_REQUIRE) {
 			throw new IllegalArgumentException("invalid action string");
@@ -420,7 +421,7 @@ public final class CapabilityPermission extends BasicPermission {
 
 	/**
 	 * Determines the equality of two CapabilityPermission objects.
-	 * 
+	 * <p>
 	 * Checks that specified object has the same name and action as this
 	 * {@code CapabilityPermission}.
 	 * 
@@ -441,8 +442,8 @@ public final class CapabilityPermission extends BasicPermission {
 
 		CapabilityPermission cp = (CapabilityPermission) obj;
 
-		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && ((attributes == cp.attributes) || ((attributes != null) && (attributes.equals(cp.attributes))))
-				&& ((bundle == cp.bundle) || ((bundle != null) && bundle.equals(cp.bundle)));
+		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && (Objects.equals(attributes, cp.attributes))
+				&& (Objects.equals(bundle, cp.bundle));
 	}
 
 	/**
@@ -499,27 +500,24 @@ public final class CapabilityPermission extends BasicPermission {
 		if (result != null) {
 			return result;
 		}
-		final Map<String, Object> props = new HashMap<String, Object>(5);
+		final Map<String, Object> props = new HashMap<>(5);
 		props.put("capability.namespace", getName());
 		if (bundle == null) {
 			return properties = props;
 		}
-		AccessController.doPrivileged(new PrivilegedAction<Void>() {
-			@Override
-			public Void run() {
-				props.put("id", Long.valueOf(bundle.getBundleId()));
-				props.put("location", bundle.getLocation());
-				String name = bundle.getSymbolicName();
-				if (name != null) {
-					props.put("name", name);
-				}
-				SignerProperty signer = new SignerProperty(bundle);
-				if (signer.isBundleSigned()) {
-					props.put("signer", signer);
-				}
-				return null;
-			}
-		});
+		AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+            props.put("id", bundle.getBundleId());
+            props.put("location", bundle.getLocation());
+            String name = bundle.getSymbolicName();
+            if (name != null) {
+                props.put("name", name);
+            }
+            SignerProperty signer = new SignerProperty(bundle);
+            if (signer.isBundleSigned()) {
+                props.put("signer", signer);
+            }
+            return null;
+        });
 		return properties = new Properties(props, attributes);
 	}
 
@@ -555,7 +553,7 @@ public final class CapabilityPermission extends BasicPermission {
 			if (entries != null) {
 				return entries;
 			}
-			Set<Map.Entry<String, Object>> all = new HashSet<Map.Entry<String, Object>>(attributes.size() + properties.size());
+			Set<Map.Entry<String, Object>> all = new HashSet<>(attributes.size() + properties.size());
 			all.addAll(attributes.entrySet());
 			all.addAll(properties.entrySet());
 			return entries = Collections.unmodifiableSet(all);
@@ -601,7 +599,7 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 * Creates an empty CapabilityPermissionCollection object.
 	 */
 	public CapabilityPermissionCollection() {
-		permissions = new HashMap<String, CapabilityPermission>();
+		permissions = new HashMap<>();
 		all_allowed = false;
 	}
 
@@ -636,7 +634,7 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 			if (f != null) {
 				pc = filterPermissions;
 				if (pc == null) {
-					filterPermissions = pc = new HashMap<String, CapabilityPermission>();
+					filterPermissions = pc = new HashMap<>();
 				}
 			} else {
 				pc = permissions;
@@ -752,7 +750,7 @@ final class CapabilityPermissionCollection extends PermissionCollection {
 	 */
 	@Override
 	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
+		List<Permission> all = new ArrayList<>(permissions.values());
 		Map<String, CapabilityPermission> pc = filterPermissions;
 		if (pc != null) {
 			all.addAll(pc.values());

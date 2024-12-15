@@ -18,17 +18,26 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.*;
-
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
-import org.osgi.framework.connect.ModuleConnector;
 import org.osgi.framework.connect.ConnectModule;
+import org.osgi.framework.connect.ModuleConnector;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * <p>
@@ -68,17 +77,17 @@ import org.osgi.framework.connect.ConnectModule;
 **/
 public class BundleArchive
 {
-    public static final transient String FILE_PROTOCOL = "file:";
-    public static final transient String REFERENCE_PROTOCOL = "reference:";
-    public static final transient String INPUTSTREAM_PROTOCOL = "inputstream:";
+    public static final String FILE_PROTOCOL = "file:";
+    public static final String REFERENCE_PROTOCOL = "reference:";
+    public static final String INPUTSTREAM_PROTOCOL = "inputstream:";
 
-    private static final transient String BUNDLE_INFO_FILE = "bundle.info";
-    private static final transient String REVISION_LOCATION_FILE = "revision.location";
-    private static final transient String REVISION_DIRECTORY = "version";
-    private static final transient String DATA_DIRECTORY = "data";
+    private static final String BUNDLE_INFO_FILE = "bundle.info";
+    private static final String REVISION_LOCATION_FILE = "revision.location";
+    private static final String REVISION_DIRECTORY = "version";
+    private static final String DATA_DIRECTORY = "data";
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<String, Object> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final File m_archiveRootDir;
 
@@ -106,7 +115,7 @@ public class BundleArchive
 
     // Maps a Long revision number to a BundleRevision.
     private final SortedMap<Long, BundleArchiveRevision> m_revisions
-        = new TreeMap<Long, BundleArchiveRevision>();
+        = new TreeMap<>();
 
     /**
      * <p>
@@ -125,7 +134,7 @@ public class BundleArchive
      * @param is input stream from which to read the bundle content.
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector
+    public BundleArchive(Logger logger, Map<String, Object> configMap, WeakZipFileFactory zipFactory, ModuleConnector
         connectFactory,
         File archiveRootDir, long id, int startLevel, String location, InputStream is)
         throws Exception
@@ -152,7 +161,7 @@ public class BundleArchive
         initialize();
 
         // Add a revision for the content.
-        reviseInternal(false, new Long(0), m_originalLocation, is);
+        reviseInternal(false, 0L, m_originalLocation, is);
     }
 
     /**
@@ -167,7 +176,7 @@ public class BundleArchive
      * @param configMap configMap for BundleArchive
      * @throws Exception if any error occurs.
     **/
-    public BundleArchive(Logger logger, Map configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
+    public BundleArchive(Logger logger, Map<String, Object> configMap, WeakZipFileFactory zipFactory, ModuleConnector connectFactory,
         File archiveRootDir)
         throws Exception
     {
@@ -457,8 +466,8 @@ public class BundleArchive
         throws Exception
     {
         Long revNum = (m_revisions.isEmpty())
-            ? new Long(0)
-            : new Long(m_revisions.lastKey().longValue() + 1);
+            ? Long.valueOf(0)
+            : Long.valueOf(m_revisions.lastKey() + 1);
 
         reviseInternal(false, revNum, location, is);
     }
@@ -549,21 +558,12 @@ public class BundleArchive
 
     private synchronized String getRevisionLocation(Long revNum) throws Exception
     {
-        InputStream is = null;
-        BufferedReader br = null;
-        try
-        {
-            is = BundleCache.getSecureAction().getInputStream(new File(
-                new File(m_archiveRootDir, REVISION_DIRECTORY +
+        try (InputStream is = BundleCache.getSecureAction().getInputStream(new File(
+            new File(m_archiveRootDir, REVISION_DIRECTORY +
                 getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
-
-            br = new BufferedReader(new InputStreamReader(is));
-            return br.readLine();
-        }
-        finally
+             BufferedReader br = new BufferedReader(new InputStreamReader(is)))
         {
-            if (br != null) br.close();
-            if (is != null) is.close();
+            return br.readLine();
         }
     }
 
@@ -571,21 +571,12 @@ public class BundleArchive
         throws Exception
     {
         // Save current revision location.
-        OutputStream os = null;
-        BufferedWriter bw = null;
-        try
-        {
-            os = BundleCache.getSecureAction()
-                .getOutputStream(new File(
-                    new File(m_archiveRootDir, REVISION_DIRECTORY +
+        try (OutputStream os = BundleCache.getSecureAction().getOutputStream(new File(
+                new File(m_archiveRootDir, REVISION_DIRECTORY +
                     getRefreshCount() + "." + revNum.toString()), REVISION_LOCATION_FILE));
-            bw = new BufferedWriter(new OutputStreamWriter(os));
-            bw.write(location, 0, location.length());
-        }
-        finally
+             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os)))
         {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
+            bw.write(location, 0, location.length());
         }
     }
 
@@ -665,7 +656,7 @@ public class BundleArchive
             {
                 File revisionDir = new File(
                     m_archiveRootDir,
-                    REVISION_DIRECTORY + refreshCount + "." + revNum.toString());
+                    REVISION_DIRECTORY + refreshCount + "." + revNum);
                 if (BundleCache.getSecureAction().fileExists(revisionDir))
                 {
                     BundleCache.deleteDirectoryTree(revisionDir);
@@ -685,7 +676,7 @@ public class BundleArchive
             File currentDir = new File(m_archiveRootDir,
                 REVISION_DIRECTORY + (refreshCount + 1) + "." + currentRevNum.toString());
             File revisionDir = new File(m_archiveRootDir,
-                REVISION_DIRECTORY + refreshCount + "." + currentRevNum.toString());
+                REVISION_DIRECTORY + refreshCount + "." + currentRevNum);
             BundleCache.getSecureAction().renameFile(revisionDir, currentDir);
         }
 
@@ -865,7 +856,7 @@ public class BundleArchive
                     {
                         throw new IllegalArgumentException("Invalid % sequence ("
                             + s.substring(i, i + 3)
-                            + ") at: " + String.valueOf(i));
+                            + ") at: " + i);
                     }
                     out.write((byte) ((d1 << 4) + d2));
                     i += 3;
@@ -885,13 +876,9 @@ public class BundleArchive
         File infoFile = new File(m_archiveRootDir, BUNDLE_INFO_FILE);
 
         // Read the bundle start level.
-        InputStream is = null;
-        BufferedReader br= null;
-        try
+        try (InputStream is = BundleCache.getSecureAction().getInputStream(infoFile);
+             BufferedReader br = new BufferedReader(new InputStreamReader(is)))
         {
-            is = BundleCache.getSecureAction()
-                .getInputStream(infoFile);
-            br = new BufferedReader(new InputStreamReader(is));
 
             // Read id.
             m_id = Long.parseLong(br.readLine());
@@ -906,23 +893,14 @@ public class BundleArchive
             // Read refresh count.
             m_refreshCount = Long.parseLong(br.readLine());
         }
-        finally
-        {
-            if (br != null) br.close();
-            if (is != null) is.close();
-        }
     }
 
     private void writeBundleInfo() throws Exception
     {
         // Write the bundle start level.
-        OutputStream os = null;
-        BufferedWriter bw = null;
-        try
+        try (OutputStream os = BundleCache.getSecureAction().getOutputStream(new File(m_archiveRootDir, BUNDLE_INFO_FILE));
+             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os)))
         {
-            os = BundleCache.getSecureAction()
-                .getOutputStream(new File(m_archiveRootDir, BUNDLE_INFO_FILE));
-            bw = new BufferedWriter(new OutputStreamWriter(os));
 
             // Write id.
             String s = Long.toString(m_id);
@@ -955,11 +933,6 @@ public class BundleArchive
                 Logger.LOG_ERROR,
                 getClass().getName() + ": Unable to cache bundle info - " + ex);
             throw ex;
-        }
-        finally
-        {
-            if (bw != null) bw.close();
-            if (os != null) os.close();
         }
     }
 }

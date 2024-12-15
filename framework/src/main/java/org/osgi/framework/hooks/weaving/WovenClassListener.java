@@ -67,5 +67,5 @@ public interface WovenClassListener {
 	 * 
 	 * @param wovenClass The woven class that completed a state transition.
 	 */
-	public void modified(WovenClass wovenClass);
+    void modified(WovenClass wovenClass);
 }

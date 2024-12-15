@@ -18,22 +18,11 @@
  */
 package org.apache.felix.framework;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.EventListener;
-import java.util.EventObject;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.felix.framework.util.*;
+import org.apache.felix.framework.util.ListenerInfo;
+import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.ShrinkableCollection;
+import org.apache.felix.framework.util.ShrinkableMap;
+import org.apache.felix.framework.util.Util;
 import org.osgi.framework.AllServiceListener;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -49,7 +38,21 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.UnfilteredServiceListener;
 import org.osgi.framework.hooks.service.ListenerHook;
-import org.osgi.framework.launch.Framework;
+
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.EventListener;
+import java.util.EventObject;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 public class EventDispatcher
 {
@@ -57,24 +60,24 @@ public class EventDispatcher
     private final ServiceRegistry m_registry;
 
     private Map<BundleContext, List<ListenerInfo>>
-        m_fwkListeners = Collections.EMPTY_MAP;
+        m_fwkListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_bndlListeners = Collections.EMPTY_MAP;
+        m_bndlListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_syncBndlListeners = Collections.EMPTY_MAP;
+        m_syncBndlListeners = Collections.emptyMap();
     private Map<BundleContext, List<ListenerInfo>>
-        m_svcListeners = Collections.EMPTY_MAP;
+        m_svcListeners = Collections.emptyMap();
 
     // A single thread is used to deliver events for all dispatchers.
     private static Thread m_thread = null;
-    private final static String m_threadLock = new String("thread lock");
+    private final static String m_threadLock = "thread lock";
     private static int m_references = 0;
     private static volatile boolean m_stopping = false;
 
     // List of requests.
-    private static final List<Request> m_requestList = new ArrayList<Request>();
+    private static final List<Request> m_requestList = new ArrayList<>();
     // Pooled requests to avoid memory allocation.
-    private static final List<Request> m_requestPool = new ArrayList<Request>();
+    private static final List<Request> m_requestPool = new ArrayList<>();
 
     private static final SecureAction m_secureAction = new SecureAction();
 
@@ -93,25 +96,21 @@ public class EventDispatcher
             {
                 m_stopping = false;
 
-                m_thread = new Thread(new Runnable() {
-                    @Override
-                    public void run()
+                m_thread = new Thread(() -> {
+                    try
                     {
-                        try
+                        run();
+                    }
+                    finally
+                    {
+                        // Ensure we update state even if stopped by external cause
+                        // e.g. an Applet VM forceably killing threads
+                        synchronized (m_threadLock)
                         {
-                            EventDispatcher.run();
-                        }
-                        finally
-                        {
-                            // Ensure we update state even if stopped by external cause
-                            // e.g. an Applet VM forceably killing threads
-                            synchronized (m_threadLock)
-                            {
-                                m_thread = null;
-                                m_stopping = false;
-                                m_references = 0;
-                                m_threadLock.notifyAll();
-                            }
+                            m_thread = null;
+                            m_stopping = false;
+                            m_references = 0;
+                            m_threadLock.notifyAll();
                         }
                     }
                 }, "FelixDispatchQueue");
@@ -221,10 +220,10 @@ public class EventDispatcher
             else if (clazz == ServiceListener.class)
             {
                 // Remember security context for filtering service events.
-                Object sm = System.getSecurityManager();
+                SecurityManager sm = System.getSecurityManager();
                 if (sm != null)
                 {
-                    acc = ((SecurityManager) sm).getSecurityContext();
+                    acc = sm.getSecurityContext();
                 }
                 // We need to create a Set for keeping track of matching service
                 // registrations so we can fire ServiceEvent.MODIFIED_ENDMATCH
@@ -445,7 +444,7 @@ public class EventDispatcher
     **/
     public Collection<ListenerHook.ListenerInfo> getAllServiceListeners()
     {
-        List<ListenerHook.ListenerInfo> listeners = new ArrayList<ListenerHook.ListenerInfo>();
+        List<ListenerHook.ListenerInfo> listeners = new ArrayList<>();
         synchronized (this)
         {
             for (Entry<BundleContext, List<ListenerInfo>> entry : m_svcListeners.entrySet())
@@ -490,7 +489,7 @@ public class EventDispatcher
         if (whitelist != null)
         {
             Map<BundleContext, List<ListenerInfo>> copy =
-                new HashMap<BundleContext, List<ListenerInfo>>();
+                new HashMap<>();
             for (BundleContext bc : whitelist)
             {
                 List<ListenerInfo> infos = listeners.get(bc);
@@ -500,7 +499,7 @@ public class EventDispatcher
                 }
             }
             listeners = copy;
-            copy = new HashMap<BundleContext, List<ListenerInfo>>();
+            copy = new HashMap<>();
             for (BundleContext bc : whitelist)
             {
                 List<ListenerInfo> infos = syncListeners.get(bc);
@@ -564,7 +563,7 @@ public class EventDispatcher
             if (whitelist != null)
             {
                 Map<BundleContext, List<ListenerInfo>> copy =
-                    new HashMap<BundleContext, List<ListenerInfo>>();
+                    new HashMap<>();
                 for (BundleContext bc : whitelist)
                 {
                     copy.put(bc, listeners.get(bc));
@@ -581,31 +580,30 @@ public class EventDispatcher
 
             // The mutable map is used to keep the lists that underpin the shrinkable collections.
             Map<BundleContext, List<ListenerInfo>> mutableMap =
-                    new HashMap<BundleContext, List<ListenerInfo>>();
+                new HashMap<>();
             // Create map with shrinkable collections.
             Map<BundleContext, Collection<ListenerHook.ListenerInfo>> shrinkableMap =
-                new HashMap<BundleContext, Collection<ListenerHook.ListenerInfo>>();
+                new HashMap<>();
             for (Entry<BundleContext, List<ListenerInfo>> entry : listeners.entrySet())
             {
                 BundleContext bc = entry.getKey();
-                ArrayList<ListenerInfo> mutableList = new ArrayList<ListenerInfo>(entry.getValue());
+                ArrayList<ListenerInfo> mutableList = new ArrayList<>(entry.getValue());
                 mutableMap.put(bc, mutableList);
 
                 // We want to pass the list as a generic collection to Shrinkable Collection.
                 // Need to convert to raw type before we can do this...
-                ArrayList ml = mutableList;
 
                 Collection<ListenerHook.ListenerInfo> shrinkableCollection =
-                        new ShrinkableCollection<ListenerHook.ListenerInfo>(ml);
+                        new ShrinkableCollection<ListenerHook.ListenerInfo>((ArrayList) mutableList);
                 shrinkableMap.put(bc, shrinkableCollection);
 
                 // Keep a copy of the System Bundle Listeners, as they might be removed by the hooks, but we
                 // actually need to keep them in the end.
                 if (bc == felix._getBundleContext())
-                    systemBundleListeners = new ArrayList<ListenerInfo>(entry.getValue());
+                    systemBundleListeners = new ArrayList<>(entry.getValue());
             }
             shrinkableMap =
-                new ShrinkableMap<BundleContext, Collection<ListenerHook.ListenerInfo>>
+                new ShrinkableMap<>
                     (shrinkableMap);
 
             for (ServiceReference<org.osgi.framework.hooks.service.EventListenerHook> sr : elhs)
@@ -648,7 +646,7 @@ public class EventDispatcher
             // the delegates for the Shrinkable Collections. Any changes made by the
             // hooks will have propagated to these maps.
             Map<BundleContext, List<ListenerInfo>> newMap =
-                new HashMap<BundleContext, List<ListenerInfo>>();
+                new HashMap<>();
             for (Map.Entry<BundleContext, Collection<ListenerHook.ListenerInfo>> entry : shrinkableMap.entrySet())
             {
                 if (!entry.getValue().isEmpty())
@@ -682,7 +680,7 @@ public class EventDispatcher
             boolean systemBundleListener = false;
             BundleContext systemBundleContext = felix._getBundleContext();
 
-            whitelist = new HashSet<BundleContext>();
+            whitelist = new HashSet<>();
             for (Entry<BundleContext, List<ListenerInfo>> entry : listeners1.entrySet())
             {
                 whitelist.add(entry.getKey());
@@ -701,7 +699,7 @@ public class EventDispatcher
 
             int originalSize = whitelist.size();
             ShrinkableCollection<BundleContext> shrinkable =
-                new ShrinkableCollection<BundleContext>(whitelist);
+                new ShrinkableCollection<>(whitelist);
             for (ServiceReference<T> sr : hooks)
             {
                 if (felix != null)
@@ -780,7 +778,7 @@ public class EventDispatcher
         Request req = null;
         synchronized (m_requestPool)
         {
-            if (m_requestPool.size() > 0)
+            if (!m_requestPool.isEmpty())
             {
                 req = m_requestPool.remove(0);
             }
@@ -867,13 +865,9 @@ public class EventDispatcher
         {
             if (System.getSecurityManager() != null)
             {
-                AccessController.doPrivileged(new PrivilegedAction() {
-                    @Override
-                    public Object run()
-                    {
-                        ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
-                        return null;
-                    }
+                AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                    ((FrameworkListener) l).frameworkEvent((FrameworkEvent) event);
+                    return null;
                 });
             }
             else
@@ -901,13 +895,9 @@ public class EventDispatcher
         {
             if (System.getSecurityManager() != null)
             {
-                AccessController.doPrivileged(new PrivilegedAction() {
-                    @Override
-                    public Object run()
-                    {
-                        ((BundleListener) l).bundleChanged((BundleEvent) event);
-                        return null;
-                    }
+                AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                    ((BundleListener) l).bundleChanged((BundleEvent) event);
+                    return null;
                 });
             }
             else
@@ -933,10 +923,10 @@ public class EventDispatcher
         // Check that the bundle has permission to get at least
         // one of the service interfaces; the objectClass property
         // of the service stores its service interfaces.
-        ServiceReference ref = ((ServiceEvent) event).getServiceReference();
+        ServiceReference<?> ref = ((ServiceEvent) event).getServiceReference();
 
         boolean hasPermission = true;
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
         if ((acc != null) && (sm != null))
         {
             try
@@ -944,7 +934,7 @@ public class EventDispatcher
                 ServicePermission perm =
                     new ServicePermission(
                         ref, ServicePermission.GET);
-                ((SecurityManager) sm).checkPermission(perm, acc);
+                sm.checkPermission(perm, acc);
             }
             catch (Exception ex)
             {
@@ -975,14 +965,9 @@ public class EventDispatcher
                 {
                     if (System.getSecurityManager() != null)
                     {
-                        AccessController.doPrivileged(new PrivilegedAction()
-                        {
-                            @Override
-                            public Object run()
-                            {
-                                ((ServiceListener) l).serviceChanged((ServiceEvent) event);
-                                return null;
-                            }
+                        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                            ((ServiceListener) l).serviceChanged((ServiceEvent) event);
+                            return null;
                         });
                     }
                     else
@@ -1002,14 +987,9 @@ public class EventDispatcher
                         ((ServiceEvent) event).getServiceReference());
                     if (System.getSecurityManager() != null)
                     {
-                        AccessController.doPrivileged(new PrivilegedAction()
-                        {
-                            @Override
-                            public Object run()
-                            {
-                                ((ServiceListener) l).serviceChanged(se);
-                                return null;
-                            }
+                        AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                            ((ServiceListener) l).serviceChanged(se);
+                            return null;
                         });
                     }
                     else
@@ -1026,16 +1006,16 @@ public class EventDispatcher
     {
         // Make a copy of the map, since we will be mutating it.
         Map<BundleContext, List<ListenerInfo>> copy =
-            new HashMap<BundleContext, List<ListenerInfo>>(listeners);
+            new HashMap<>(listeners);
         // Remove the affected entry and make a copy so we can modify it.
         List<ListenerInfo> infos = copy.remove(info.getBundleContext());
         if (infos == null)
         {
-            infos = new ArrayList<ListenerInfo>();
+            infos = new ArrayList<>();
         }
         else
         {
-            infos = new ArrayList<ListenerInfo>(infos);
+            infos = new ArrayList<>(infos);
         }
         // Add the new listener info.
         infos.add(info);
@@ -1050,12 +1030,12 @@ public class EventDispatcher
     {
         // Make a copy of the map, since we will be mutating it.
         Map<BundleContext, List<ListenerInfo>> copy =
-            new HashMap<BundleContext, List<ListenerInfo>>(listeners);
+            new HashMap<>(listeners);
         // Remove the affected entry and make a copy so we can modify it.
         List<ListenerInfo> infos = copy.remove(info.getBundleContext());
         if (infos != null)
         {
-            infos = new ArrayList<ListenerInfo>(infos);
+            infos = new ArrayList<>(infos);
             // Update the new listener info.
             infos.set(idx, info);
             // Put the listeners back into the copy of the map and return it.
@@ -1070,12 +1050,12 @@ public class EventDispatcher
     {
         // Make a copy of the map, since we will be mutating it.
         Map<BundleContext, List<ListenerInfo>> copy =
-            new HashMap<BundleContext, List<ListenerInfo>>(listeners);
+            new HashMap<>(listeners);
         // Remove the affected entry and make a copy so we can modify it.
         List<ListenerInfo> infos = copy.remove(bc);
         if (infos != null)
         {
-            infos = new ArrayList<ListenerInfo>(infos);
+            infos = new ArrayList<>(infos);
             // Remove the listener info.
             infos.remove(idx);
             if (!infos.isEmpty())
@@ -1093,7 +1073,7 @@ public class EventDispatcher
     {
         // Make a copy of the map, since we will be mutating it.
         Map<BundleContext, List<ListenerInfo>> copy =
-            new HashMap<BundleContext, List<ListenerInfo>>(listeners);
+            new HashMap<>(listeners);
         // Remove the affected entry and return the copy.
         copy.remove(bc);
         return copy;

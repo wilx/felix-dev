@@ -21,7 +21,7 @@ import org.osgi.framework.Version;
 
 /**
  * A required bundle.
- * 
+ * <p>
  * Objects implementing this interface are created by the Package Admin service.
  * 
  * <p>
@@ -35,7 +35,7 @@ import org.osgi.framework.Version;
  * {@code RequiredBundle} object becomes stale if an exported package of
  * the bundle it references has been updated or removed as a result of calling
  * {@code PackageAdmin.refreshPackages()}).
- * 
+ * <p>
  * If this object becomes stale, its {@code getSymbolicName()} and
  * {@code getVersion()} methods continue to return their original values,
  * {@code isRemovalPending()} returns true, and {@code getBundle()}
@@ -54,7 +54,7 @@ public interface RequiredBundle {
 	 * 
 	 * @return The symbolic name of this required bundle.
 	 */
-	public String getSymbolicName();
+    String getSymbolicName();
 
 	/**
 	 * Returns the bundle associated with this required bundle.
@@ -62,7 +62,7 @@ public interface RequiredBundle {
 	 * @return The bundle, or {@code null} if this
 	 *         {@code RequiredBundle} object has become stale.
 	 */
-	public Bundle getBundle();
+    Bundle getBundle();
 
 	/**
 	 * Returns the bundles that currently require this required bundle.
@@ -77,7 +77,7 @@ public interface RequiredBundle {
 	 *         has become stale. The array will be empty if no bundles require
 	 *         this required package.
 	 */
-	public Bundle[] getRequiringBundles();
+    Bundle[] getRequiringBundles();
 
 	/**
 	 * Returns the version of this required bundle.
@@ -86,7 +86,7 @@ public interface RequiredBundle {
 	 *         {@link Version#emptyVersion} if no version information is
 	 *         available.
 	 */
-	public Version getVersion();
+    Version getVersion();
 
 	/**
 	 * Returns {@code true} if the bundle associated with this
@@ -96,5 +96,5 @@ public interface RequiredBundle {
 	 *         uninstalled, or if the {@code RequiredBundle} object has
 	 *         become stale; {@code false} otherwise.
 	 */
-	public boolean isRemovalPending();
+    boolean isRemovalPending();
 }

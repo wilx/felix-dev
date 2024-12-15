@@ -34,5 +34,5 @@ public interface BundleReference {
 	 * @return The {@code Bundle} object associated with this
 	 *         {@code BundleReference}.
 	 */
-	public Bundle getBundle();
+    Bundle getBundle();
 }

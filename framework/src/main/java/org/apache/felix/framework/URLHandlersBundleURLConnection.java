@@ -18,17 +18,17 @@
  */
 package org.apache.felix.framework;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.Permission;
-
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleRevisions;
 import org.osgi.framework.wiring.BundleWiring;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.Permission;
 
 class URLHandlersBundleURLConnection extends URLConnection
 {
@@ -54,7 +54,7 @@ class URLHandlersBundleURLConnection extends URLConnection
         // the bundle, then throw an exception since this isn't possible.
         // We only allow "/" as a valid URL so it can be used as context
         // for creating other URLs.
-        if ((path == null) || (path.length() == 0) || path.equals("/"))
+        if ((path == null) || (path.isEmpty()) || path.equals("/"))
         {
             throw new IOException("Resource does not exist: " + url);
         }
@@ -137,7 +137,7 @@ class URLHandlersBundleURLConnection extends URLConnection
                     throw new IOException("Resource does not exist: " + url);
                 }
                 path = url.getPath();
-                if ((path == null) || (path.length() == 0) || path.equals("/"))
+                if ((path == null) || (path.isEmpty()) || path.equals("/"))
                 {
                     throw new IOException("Resource does not exist: " + url);
                 }

@@ -92,7 +92,7 @@ public class ExtensionManagerTest {
     @Test
     public void testBuildNativeCapabilities() {
         Logger logger = new Logger();
-        Map<String, String> configMap = new HashMap<String, String>();
+        Map<String, Object> configMap = new HashMap<>();
         configMap.put(FelixConstants.FELIX_VERSION_PROPERTY, "1.0");
         configMap.put(FelixConstants.FRAMEWORK_LANGUAGE, "en");
         configMap.put(FelixConstants.FRAMEWORK_PROCESSOR, "x86_64");
@@ -134,7 +134,7 @@ public class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -165,7 +165,7 @@ public class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -199,7 +199,7 @@ public class ExtensionManagerTest {
         cacheDir.mkdirs();
         String cache = cacheDir.getAbsolutePath();
 
-        Map<String, Object> params = new HashMap<String, Object>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -212,7 +212,7 @@ public class ExtensionManagerTest {
         String versionString;
         if (version.getMajor() < 9)
         {
-            versionString = String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() : 6);
+            versionString = String.format("0.0.0.JavaSE_001_%03d", Math.max(version.getMinor(), 6));
         }
         else
         {

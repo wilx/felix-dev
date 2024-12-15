@@ -96,7 +96,7 @@ public interface ServiceFactory<S> {
 	 *         the classes named when the service was registered.
 	 * @see BundleContext#getService(ServiceReference)
 	 */
-	public S getService(Bundle bundle, ServiceRegistration<S> registration);
+    S getService(Bundle bundle, ServiceRegistration<S> registration);
 
 	/**
 	 * Releases a service object customized for a bundle.
@@ -119,5 +119,5 @@ public interface ServiceFactory<S> {
 	 *        method.
 	 * @see BundleContext#ungetService(ServiceReference)
 	 */
-	public void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
+    void ungetService(Bundle bundle, ServiceRegistration<S> registration, S service);
 }

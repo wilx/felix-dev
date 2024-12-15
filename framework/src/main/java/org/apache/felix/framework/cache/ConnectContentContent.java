@@ -18,6 +18,10 @@
  */
 package org.apache.felix.framework.cache;
 
+import org.apache.felix.framework.Logger;
+import org.apache.felix.framework.util.WeakZipFileFactory;
+import org.osgi.framework.connect.ConnectContent;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,24 +31,20 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.felix.framework.Logger;
-import org.apache.felix.framework.util.WeakZipFileFactory;
-import org.osgi.framework.connect.ConnectContent;
-
 public class ConnectContentContent implements Content
 {
-    private static final transient String EMBEDDED_DIRECTORY = "-embedded";
-    private static final transient String LIBRARY_DIRECTORY = "-lib";
+    private static final String EMBEDDED_DIRECTORY = "-embedded";
+    private static final String LIBRARY_DIRECTORY = "-lib";
 
     private final Logger m_logger;
     private final WeakZipFileFactory m_zipFactory;
-    private final Map m_configMap;
+    private final Map<String, Object> m_configMap;
     private final String m_name;
     private final File m_rootDir;
     private final Object m_revisionLock;
     private final ConnectContent m_content;
 
-    public ConnectContentContent(Logger logger, WeakZipFileFactory zipFactory, Map configMap, String name, File rootDir, Object revisionLock, ConnectContent content) throws IOException
+    public ConnectContentContent(Logger logger, WeakZipFileFactory zipFactory, Map<String, Object> configMap, String name, File rootDir, Object revisionLock, ConnectContent content) throws IOException
     {
         m_logger = logger;
         m_zipFactory = zipFactory;

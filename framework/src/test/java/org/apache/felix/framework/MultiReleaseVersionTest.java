@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class MultiReleaseVersionTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         //mf.getMainAttributes().putValue(Constants.BUNDLE_ACTIVATOR, StartStopBundleTest.TestBundleActivator.class.getName());
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);

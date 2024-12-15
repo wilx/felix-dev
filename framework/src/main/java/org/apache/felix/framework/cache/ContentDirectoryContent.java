@@ -33,7 +33,7 @@ public class ContentDirectoryContent implements Content
     {
         m_content = content;
         // Add a '/' to the end if not present.
-        m_rootPath = (path.length() > 0) && (path.charAt(path.length() - 1) != '/')
+        m_rootPath = (!path.isEmpty()) && (path.charAt(path.length() - 1) != '/')
             ? path + "/" : path;
     }
 
@@ -83,7 +83,7 @@ public class ContentDirectoryContent implements Content
 
     private String getName(String name)
     {
-        if ((name.length() > 0) && (name.charAt(0) == '/')) {
+        if ((!name.isEmpty()) && (name.charAt(0) == '/')) {
             name = name.substring(1);
         }
         return name;

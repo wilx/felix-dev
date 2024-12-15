@@ -18,9 +18,26 @@
  */
 package org.apache.felix.framework;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import junit.framework.TestCase;
+import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
+import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
+import org.apache.felix.framework.ServiceRegistry.UsageCount;
+import org.easymock.MockControl;
+import org.mockito.AdditionalAnswers;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.PrototypeServiceFactory;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceException;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.hooks.service.EventHook;
+import org.osgi.framework.hooks.service.FindHook;
+import org.osgi.framework.hooks.service.ListenerHook;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -36,28 +53,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
-import org.apache.felix.framework.ServiceRegistry.ServiceHolder;
-import org.apache.felix.framework.ServiceRegistry.UsageCount;
-import org.easymock.MockControl;
-import org.mockito.AdditionalAnswers;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.PrototypeServiceFactory;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceException;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.hooks.service.EventHook;
-import org.osgi.framework.hooks.service.FindHook;
-import org.osgi.framework.hooks.service.ListenerHook;
-
-import junit.framework.TestCase;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ServiceRegistryTest extends TestCase
 {
@@ -73,12 +71,7 @@ public class ServiceRegistryTest extends TestCase
         controlContext.replay();
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        EventHook hook = new EventHook()
-        {
-            @Override
-            public void event(ServiceEvent event, Collection contexts)
-            {
-            }
+        EventHook hook = (event, contexts) -> {
         };
 
         assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
@@ -142,13 +135,7 @@ public class ServiceRegistryTest extends TestCase
         controlContext.replay();
 
         ServiceRegistry sr = new ServiceRegistry(new Logger(), null);
-        FindHook hook = new FindHook()
-        {
-            @Override
-            public void find(BundleContext context, String name, String filter,
-                boolean allServices, Collection references)
-            {
-            }
+        FindHook hook = (context, name, filter, allServices, references) -> {
         };
 
         assertEquals("Precondition failed", 0, sr.getHookRegistry().getHooks(EventHook.class).size());
@@ -406,20 +393,16 @@ public class ServiceRegistryTest extends TestCase
 
         final StringBuffer sb = new StringBuffer();
         final AtomicBoolean threadException = new AtomicBoolean(false);
-        Thread t = new Thread() {
-            @Override
-            public void run()
+        Thread t = new Thread(() -> {
+            try { Thread.sleep(250); } catch (InterruptedException e) {}
+            sh.m_service = svc;
+            if (sb.length() > 0)
             {
-                try { Thread.sleep(250); } catch (InterruptedException e) {}
-                sh.m_service = svc;
-                if (sb.length() > 0)
-                {
-                    // Should not have put anything in SB until countDown() was called...
-                    threadException.set(true);
-                }
-                sh.m_latch.countDown();
+                // Should not have put anything in SB until countDown() was called...
+                threadException.set(true);
             }
-        };
+            sh.m_latch.countDown();
+        });
         assertFalse(t.isInterrupted());
         t.start();
 
@@ -756,7 +739,7 @@ public class ServiceRegistryTest extends TestCase
         ConcurrentMap<Bundle, UsageCount[]> inUseMap = (ConcurrentMap<Bundle, UsageCount[]>) getPrivateField(sr, "m_inUseMap");
 
         Bundle b = Mockito.mock(Bundle.class);
-        ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
+        ServiceReference<String> ref = Mockito.mock(ServiceReference.class);
 
         UsageCount uc = new UsageCount(ref, true);
         ServiceHolder sh = new ServiceHolder();
@@ -802,19 +785,14 @@ public class ServiceRegistryTest extends TestCase
 
         ConcurrentMap<Bundle, UsageCount[]> inUseMap =
             Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
-        Mockito.doAnswer(new Answer<UsageCount[]>()
-            {
-                @Override
-                public UsageCount[] answer(InvocationOnMock invocation) throws Throwable
-                {
-                    // This mimicks another thread putting another UsageCount in concurrently
-                    // The putIfAbsent() will fail and it has to retry
-                    UsageCount uc = new UsageCount(Mockito.mock(ServiceReference.class), false);
-                    UsageCount[] uca = new UsageCount[] {uc};
-                    orgInUseMap.put(b, uca);
-                    return uca;
-                }
-            }).when(inUseMap).putIfAbsent(Mockito.any(Bundle.class), Mockito.any(UsageCount[].class));
+        Mockito.doAnswer((Answer<UsageCount[]>) invocation -> {
+            // This mimicks another thread putting another UsageCount in concurrently
+            // The putIfAbsent() will fail and it has to retry
+            UsageCount uc = new UsageCount(Mockito.mock(ServiceReference.class), false);
+            UsageCount[] uca = new UsageCount[] {uc};
+            orgInUseMap.put(b, uca);
+            return uca;
+        }).when(inUseMap).putIfAbsent(Mockito.any(Bundle.class), Mockito.any(UsageCount[].class));
         setPrivateField(sr, "m_inUseMap", inUseMap);
 
         ServiceReference<?> ref = Mockito.mock(ServiceReference.class);
@@ -825,7 +803,7 @@ public class ServiceRegistryTest extends TestCase
         assertEquals(2, orgInUseMap.get(b).length);
         assertSame(ref, uc.m_ref);
         assertFalse(uc.m_prototype);
-        List<UsageCount> l = new ArrayList<UsageCount>(Arrays.asList(orgInUseMap.get(b)));
+        List<UsageCount> l = new ArrayList<>(Arrays.asList(orgInUseMap.get(b)));
         l.remove(uc);
         assertEquals("There should be one UsageCount left", 1, l.size());
         assertNotSame(ref, l.get(0).m_ref);
@@ -844,15 +822,10 @@ public class ServiceRegistryTest extends TestCase
 
         ConcurrentMap<Bundle, UsageCount[]> inUseMap =
             Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
-        Mockito.doAnswer(new Answer<Boolean>()
-            {
-                @Override
-                public Boolean answer(InvocationOnMock invocation) throws Throwable
-                {
-                    orgInUseMap.remove(b);
-                    return false;
-                }
-            }).when(inUseMap).replace(Mockito.any(Bundle.class),
+        Mockito.doAnswer((Answer<Boolean>) invocation -> {
+            orgInUseMap.remove(b);
+            return false;
+        }).when(inUseMap).replace(Mockito.any(Bundle.class),
                     Mockito.any(UsageCount[].class), Mockito.any(UsageCount[].class));
         setPrivateField(sr, "m_inUseMap", inUseMap);
 
@@ -993,15 +966,10 @@ public class ServiceRegistryTest extends TestCase
 
         final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
             Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
-        Mockito.doAnswer(new Answer<Boolean>()
-            {
-                @Override
-                public Boolean answer(InvocationOnMock invocation) throws Throwable
-                {
-                    inUseMap.put(b, new UsageCount[] {uc});
-                    return false;
-                }
-            }).when(inUseMap).replace(Mockito.isA(Bundle.class),
+        Mockito.doAnswer((Answer<Boolean>) invocation -> {
+            inUseMap.put(b, new UsageCount[] {uc});
+            return false;
+        }).when(inUseMap).replace(Mockito.isA(Bundle.class),
                     Mockito.isA(UsageCount[].class), Mockito.isA(UsageCount[].class));
         setPrivateField(sr, "m_inUseMap", inUseMap);
 
@@ -1029,15 +997,10 @@ public class ServiceRegistryTest extends TestCase
 
         final ConcurrentMap<Bundle, UsageCount[]> inUseMap =
             Mockito.mock(ConcurrentMap.class, AdditionalAnswers.delegatesTo(orgInUseMap));
-        Mockito.doAnswer(new Answer<Boolean>()
-            {
-                @Override
-                public Boolean answer(InvocationOnMock invocation) throws Throwable
-                {
-                    inUseMap.put(b, new UsageCount[] {uc, uc2});
-                    return false;
-                }
-            }).when(inUseMap).remove(Mockito.isA(Bundle.class), Mockito.isA(UsageCount[].class));
+        Mockito.doAnswer((Answer<Boolean>) invocation -> {
+            inUseMap.put(b, new UsageCount[] {uc, uc2});
+            return false;
+        }).when(inUseMap).remove(Mockito.isA(Bundle.class), Mockito.isA(UsageCount[].class));
         setPrivateField(sr, "m_inUseMap", inUseMap);
 
         inUseMap.put(b, new UsageCount[] {uc});
@@ -1109,38 +1072,32 @@ public class ServiceRegistryTest extends TestCase
         final int MAX_LOOPS = 50000;
         final CountDownLatch latch = new CountDownLatch(MAX_THREADS);
         final Thread[] threads = new Thread[MAX_THREADS];
-        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
         for(int i=0; i<MAX_THREADS; i++)
         {
-            threads[i] = new Thread(new Runnable()
-            {
-
-                @Override
-                public void run()
+            threads[i] = new Thread(() -> {
+                try
+                {
+                    Thread.currentThread().sleep(50);
+                }
+                catch (InterruptedException e1)
+                {
+                    // ignore
+                }
+                for(int i1 = 0; i1 < MAX_LOOPS; i1++)
                 {
                     try
                     {
-                        Thread.currentThread().sleep(50);
+                        final Object obj1 = sr.getService(clientBundle, reg.getReference(), false);
+                        ((Observer) obj1).update(null, null);
+                        sr.ungetService(clientBundle, reg.getReference(), null);
                     }
-                    catch (InterruptedException e1)
+                    catch ( final Exception e)
                     {
-                        // ignore
+                        exceptions.add(e);
                     }
-                    for(int i=0; i < MAX_LOOPS; i++)
-                    {
-                        try
-                        {
-                            final Object obj = sr.getService(clientBundle, reg.getReference(), false);
-                            ((Observer)obj).update(null, null);
-                            sr.ungetService(clientBundle, reg.getReference(), null);
-                        }
-                        catch ( final Exception e)
-                        {
-                            exceptions.add(e);
-                        }
-                    }
-                    latch.countDown();
                 }
+                latch.countDown();
             });
         }
         for(int i=0; i<MAX_THREADS; i++)
@@ -1150,7 +1107,7 @@ public class ServiceRegistryTest extends TestCase
 
         latch.await();
 
-        List<String> counterValues = new ArrayList<String>();
+        List<String> counterValues = new ArrayList<>();
         for (Exception ex : exceptions)
         {
             counterValues.add(ex.getMessage());
@@ -1188,36 +1145,27 @@ public class ServiceRegistryTest extends TestCase
         final Bundle b = Mockito.mock(Bundle.class);
         ServiceRegistrationImpl reg = Mockito.mock(ServiceRegistrationImpl.class);
         Mockito.when(reg.isValid()).thenReturn(true);
-        Mockito.when(reg.getService(b)).thenAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable
-            {
-                Thread.sleep(500);
-                throw new Exception("boo!");
-            }
+        Mockito.when(reg.getService(b)).thenAnswer((Answer) invocation -> {
+            Thread.sleep(500);
+            throw new Exception("boo!");
         });
 
         final ServiceReferenceImpl ref = Mockito.mock(ServiceReferenceImpl.class);
         Mockito.when(ref.getRegistration()).thenReturn(reg);
 
         final StringBuffer sb = new StringBuffer();
-        Thread t = new Thread()
-        {
-            @Override
-            public void run()
+        Thread t = new Thread(() -> {
+            try
             {
-                try
-                {
-                    assertEquals("Should not yet have given the service to the other thread",
-                            "", sb.toString());
-                    sr.getService(b, ref, false);
-                }
-                catch (Exception e)
-                {
-                    // We expect an exception here.
-                }
+                assertEquals("Should not yet have given the service to the other thread",
+                        "", sb.toString());
+                sr.getService(b, ref, false);
             }
-        };
+            catch (Exception e)
+            {
+                // We expect an exception here.
+            }
+        });
         t.start();
 
         // Wait until the other thread has called getService();

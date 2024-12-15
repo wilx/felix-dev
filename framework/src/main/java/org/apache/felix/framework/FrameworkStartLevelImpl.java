@@ -105,11 +105,11 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
     public void setStartLevel(int startlevel, FrameworkListener... listeners)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(
+            sm.checkPermission(
                 new AdminPermission(m_felix, AdminPermission.STARTLEVEL));
         }
 
@@ -173,11 +173,11 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
     public void setInitialBundleStartLevel(int startlevel)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(
+            sm.checkPermission(
                 new AdminPermission(m_felix, AdminPermission.STARTLEVEL));
         }
         m_felix.setInitialBundleStartLevel(startlevel);
@@ -209,11 +209,11 @@ class FrameworkStartLevelImpl implements FrameworkStartLevel, Runnable
 
         public void setStartLevel(int startlevel)
         {
-            Object sm = System.getSecurityManager();
+            SecurityManager sm = System.getSecurityManager();
 
             if (sm != null)
             {
-                ((SecurityManager) sm).checkPermission(
+                sm.checkPermission(
                     new AdminPermission(m_bundle, AdminPermission.EXECUTE));
             }
 

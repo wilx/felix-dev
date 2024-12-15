@@ -110,7 +110,7 @@ public final class BundlePermission extends BasicPermission {
 	 * fragment symbolic name within the OSGi environment.
 	 * <p>
 	 * Bundle Permissions are granted over all possible versions of a bundle.
-	 * 
+	 * <p>
 	 * A bundle that needs to provide a bundle must have the appropriate
 	 * {@code BundlePermission} for the symbolic name; a bundle that requires a
 	 * bundle must have the appropriate {@code BundlePermssion} for that
@@ -360,7 +360,7 @@ public final class BundlePermission extends BasicPermission {
 
 	/**
 	 * Determines the equality of two {@code BundlePermission} objects.
-	 * 
+	 * <p>
 	 * This method checks that specified bundle has the same bundle symbolic
 	 * name and {@code BundlePermission} actions as this
 	 * {@code BundlePermission} object.
@@ -453,7 +453,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 * 
 	 */
 	public BundlePermissionCollection() {
-		permissions = new HashMap<String, BundlePermission>();
+		permissions = new HashMap<>();
 		all_allowed = false;
 	}
 
@@ -568,7 +568,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	 */
 	@Override
 	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
+		List<Permission> all = new ArrayList<>(permissions.values());
 		return Collections.enumeration(all);
 	}
 
@@ -576,7 +576,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 	private static final ObjectStreamField[]	serialPersistentFields	= {new ObjectStreamField("permissions", Hashtable.class), new ObjectStreamField("all_allowed", Boolean.TYPE)};
 
 	private synchronized void writeObject(ObjectOutputStream out) throws IOException {
-		Hashtable<String, BundlePermission> hashtable = new Hashtable<String, BundlePermission>(permissions);
+		Hashtable<String, BundlePermission> hashtable = new Hashtable<>(permissions);
 		ObjectOutputStream.PutField pfields = out.putFields();
 		pfields.put("permissions", hashtable);
 		pfields.put("all_allowed", all_allowed);
@@ -587,7 +587,7 @@ final class BundlePermissionCollection extends PermissionCollection {
 		ObjectInputStream.GetField gfields = in.readFields();
 		@SuppressWarnings("unchecked")
 		Hashtable<String, BundlePermission> hashtable = (Hashtable<String, BundlePermission>) gfields.get("permissions", null);
-		permissions = new HashMap<String, BundlePermission>(hashtable);
+		permissions = new HashMap<>(hashtable);
 		all_allowed = gfields.get("all_allowed", false);
 	}
 }

@@ -18,6 +18,11 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,16 +34,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
-import org.osgi.framework.Filter;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-
 public class FilterTest extends TestCase
 {
     public void testMissingAttribute()
     {
-        Dictionary<String, Object> dict = new Hashtable<String, Object>();
+        Dictionary<String, Object> dict = new Hashtable<>();
         dict.put("one", "one-value");
         dict.put("two", "two-value");
         dict.put("three", "three-value");
@@ -64,8 +64,7 @@ public class FilterTest extends TestCase
         assertTrue(filter.match(createTestDict(array)));
 
         //ArrayList
-        ArrayList<String> arrayList = new ArrayList<String>();
-        arrayList.addAll(Arrays.asList(array));
+        ArrayList<String> arrayList = new ArrayList<>(Arrays.asList(array));
         assertTrue(filter.match(createTestDict(arrayList)));
 
         //unmodifiableList
@@ -78,8 +77,7 @@ public class FilterTest extends TestCase
         assertTrue(filter.match(createTestDict(unmodCollection)));
 
         //hashSet
-        Set<String> hashSet = new HashSet<String>();
-        hashSet.addAll(arrayList);
+        Set<String> hashSet = new HashSet<>(arrayList);
         assertTrue(filter.match(createTestDict(hashSet)));
 
         //synchronizedCollection
@@ -88,13 +86,13 @@ public class FilterTest extends TestCase
         assertTrue(filter.match(createTestDict(synchronizedCollection)));
 
         //linkedList
-        Collection<String> linkedList = new LinkedList<String>(arrayList);
+        Collection<String> linkedList = new LinkedList<>(arrayList);
         assertTrue(filter.match(createTestDict(linkedList)));
     }
 
     private static Dictionary<String, Object> createTestDict(Object o)
     {
-        Hashtable<String, Object> dictionary = new Hashtable<String, Object>();
+        Hashtable<String, Object> dictionary = new Hashtable<>();
         dictionary.put("checkBool", true);
         dictionary.put("checkString", o);
         return dictionary;

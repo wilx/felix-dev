@@ -18,17 +18,17 @@
  */
 package org.apache.felix.framework.security.util;
 
-import java.io.File;
+import org.apache.felix.framework.util.SecureAction;
+
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.security.KeyStore;
+import java.security.cert.CRL;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
-
-import org.apache.felix.framework.util.SecureAction;
 
 /*
  * TODO: the certificate stores as well as the CRLs might change over time 
@@ -42,8 +42,8 @@ public final class TrustManager
     private final String m_typeList;
     private final String m_passwdList;
     private final String m_storeList;
-    private Collection m_caCerts = null;
-    private Collection m_crls = null;
+    private Collection<Certificate> m_caCerts = null;
+    private Collection<CRL> m_crls = null;
 
     public TrustManager(String crlList, String typeList, String passwdList,
         String storeList, SecureAction action)
@@ -66,8 +66,8 @@ public final class TrustManager
             }
             catch (Exception ex)
             {
-                m_caCerts = new ArrayList();
-                m_crls = new ArrayList();
+                m_caCerts = new ArrayList<>();
+                m_crls = new ArrayList<>();
                 // TODO: log this
                 ex.printStackTrace();
             }
@@ -76,9 +76,9 @@ public final class TrustManager
 
     private void initCRLs() throws Exception
     {
-        final Collection result = new ArrayList();
+        final Collection<CRL> result = new ArrayList<>();
 
-        if (m_crlList.trim().length() != 0)
+        if ( !m_crlList.trim().isEmpty() )
         {
             CertificateFactory fac = CertificateFactory.getInstance("X509");
 
@@ -121,9 +121,9 @@ public final class TrustManager
 
     private void initCaCerts() throws Exception
     {
-    	final Collection result = new ArrayList();
+    	final Collection<Certificate> result = new ArrayList<>();
 
-        if (m_storeList.trim().length() != 0)
+        if ( !m_storeList.trim().isEmpty() )
         {
 
             StringTokenizer storeTok = new StringTokenizer(m_storeList, "|");
@@ -142,12 +142,12 @@ public final class TrustManager
                         .openConnection());
                     String pass = passwdTok.nextToken().trim();
 
-                    ks.load(input, (pass.length() > 0) ? pass.toCharArray()
+                    ks.load(input, (!pass.isEmpty()) ? pass.toCharArray()
                         : null);
 
-                    for (Enumeration e = ks.aliases(); e.hasMoreElements();)
+                    for (Enumeration<String> e = ks.aliases(); e.hasMoreElements();)
                     {
-                        String alias = (String) e.nextElement();
+                        String alias = e.nextElement();
                         result.add(ks.getCertificate(alias));
                     }
                 }
@@ -177,14 +177,14 @@ public final class TrustManager
         m_caCerts = result;
     }
 
-    public Collection getCRLs()
+    public Collection<CRL> getCRLs()
     {
         init();
 
         return m_crls;
     }
 
-    public Collection getCaCerts()
+    public Collection<Certificate> getCaCerts()
     {
         init();
 

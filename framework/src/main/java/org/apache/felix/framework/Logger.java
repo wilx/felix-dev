@@ -18,11 +18,11 @@
  */
 package org.apache.felix.framework;
 
-import java.lang.reflect.Method;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
+
+import java.lang.reflect.Method;
 
 /**
  * <p>
@@ -111,7 +111,7 @@ public class Logger extends org.apache.felix.resolver.Logger
         }
         else if (bundle != null)
         {
-            s.append("Bundle ").append(bundle.toString()).append(" ").append(msg);
+            s.append("Bundle ").append(bundle).append(" ").append(msg);
         }
         else
         {

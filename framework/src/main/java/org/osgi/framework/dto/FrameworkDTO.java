@@ -16,10 +16,11 @@
 
 package org.osgi.framework.dto;
 
-import java.util.List;
-import java.util.Map;
 import org.osgi.dto.DTO;
 import org.osgi.framework.BundleContext;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Data Transfer Object for a Framework.
@@ -43,7 +44,7 @@ public class FrameworkDTO extends DTO {
 
     /**
 	 * The launch properties of the framework.
-	 * 
+	 * <p>
 	 * The value type must be a numerical type, Boolean, String, DTO or an array
 	 * of any of the former.
 	 * 

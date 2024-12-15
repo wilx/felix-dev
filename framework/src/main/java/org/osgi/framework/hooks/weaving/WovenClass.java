@@ -16,14 +16,15 @@
 
 package org.osgi.framework.hooks.weaving;
 
-import java.security.ProtectionDomain;
-import java.util.List;
 import org.osgi.annotation.versioning.ProviderType;
 import org.osgi.framework.wiring.BundleWiring;
 
+import java.security.ProtectionDomain;
+import java.util.List;
+
 /**
  * A class being woven.
- * 
+ * <p>
  * This object represents a class being woven and is passed to each
  * {@link WeavingHook} for possible modification. It allows access to the most
  * recently transformed class file bytes and to any additional packages that
@@ -123,7 +124,7 @@ public interface WovenClass {
 	 *         {@code AdminPermission[bundle,WEAVE]} and the Java runtime
 	 *         environment supports permissions.
 	 */
-	public byte[] getBytes();
+    byte[] getBytes();
 
 	/**
 	 * Set the class file bytes to be used to define the
@@ -150,7 +151,7 @@ public interface WovenClass {
 	 *         {@code AdminPermission[bundle,WEAVE]} and the Java runtime
 	 *         environment supports permissions.
 	 */
-	public void setBytes(byte[] newBytes);
+    void setBytes(byte[] newBytes);
 
 	/**
 	 * Returns the list of dynamic import package descriptions to add to the
@@ -176,7 +177,7 @@ public interface WovenClass {
 	 *         malformed dynamic import package description is added.
 	 * @see "Core Specification, Dynamic Import Package, for the syntax of a dynamic import package description."
 	 */
-	public List<String> getDynamicImports();
+    List<String> getDynamicImports();
 
 	/**
 	 * Returns whether weaving is complete in this woven class. Weaving is
@@ -186,14 +187,14 @@ public interface WovenClass {
 	 *         {@link #TRANSFORMING_FAILED} or {@link #DEFINE_FAILED};
 	 *         {@code false} otherwise.
 	 */
-	public boolean isWeavingComplete();
+    boolean isWeavingComplete();
 
 	/**
 	 * Returns the fully qualified name of the class being woven.
 	 * 
 	 * @return The fully qualified name of the class being woven.
 	 */
-	public String getClassName();
+    String getClassName();
 
 	/**
 	 * Returns the protection domain to which the woven class will be assigned
@@ -203,7 +204,7 @@ public interface WovenClass {
 	 *         when it is defined, or {@code null} if no protection domain will
 	 *         be assigned.
 	 */
-	public ProtectionDomain getProtectionDomain();
+    ProtectionDomain getProtectionDomain();
 
 	/**
 	 * Returns the class defined by this woven class. During weaving, this
@@ -215,14 +216,14 @@ public interface WovenClass {
 	 *         weaving is not complete, the class definition failed or this
 	 *         woven class was not used to define the class.
 	 */
-	public Class<?> getDefinedClass();
+    Class<?> getDefinedClass();
 
 	/**
 	 * Returns the bundle wiring whose class loader will define the woven class.
 	 * 
 	 * @return The bundle wiring whose class loader will define the woven class.
 	 */
-	public BundleWiring getBundleWiring();
+    BundleWiring getBundleWiring();
 
 	/**
 	 * Returns the current state of this woven class.
@@ -234,5 +235,5 @@ public interface WovenClass {
 	 *         {@link #DEFINE_FAILED}.
 	 * @since 1.1
 	 */
-	public int getState();
+    int getState();
 }

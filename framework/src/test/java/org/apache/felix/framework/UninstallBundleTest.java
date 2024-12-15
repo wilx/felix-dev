@@ -18,10 +18,17 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkListener;
+import org.osgi.service.packageadmin.ExportedPackage;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,19 +37,12 @@ import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import junit.framework.TestCase;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkListener;
-import org.osgi.service.packageadmin.ExportedPackage;
-
 public class UninstallBundleTest extends TestCase
 {
     private static final int DELAY = 1000;
 
     public void testUninstallBundleCleansUpRevision() throws Exception {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES,
             "org.osgi.framework; version=1.4.0,"
             + "org.osgi.service.packageadmin; version=1.2.0,"
@@ -72,7 +72,7 @@ public class UninstallBundleTest extends TestCase
                 + "Import-Package: org.foo.bar, org.foo.bbr\n";
         File bundleCFile = createBundle(mfC, cacheDir);
 
-        final List<Bundle> shouldNotBeRefreshed = new ArrayList<Bundle>();
+        final List<Bundle> shouldNotBeRefreshed = new ArrayList<>();
         Felix felix = new Felix(params) {
             @Override
             void refreshPackages(Collection<Bundle> targets, FrameworkListener[] listeners)
@@ -143,7 +143,7 @@ public class UninstallBundleTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 

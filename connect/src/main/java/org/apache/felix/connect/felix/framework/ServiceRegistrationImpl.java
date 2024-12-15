@@ -368,7 +368,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
 
         private ServiceReferenceImpl()
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new ServiceReferenceMap();
         }
 
@@ -396,7 +396,7 @@ class ServiceRegistrationImpl implements ServiceRegistration
         @Override
         public Map<String, String> getDirectives()
         {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
 
         @Override

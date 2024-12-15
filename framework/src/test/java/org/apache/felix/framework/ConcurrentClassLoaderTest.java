@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,21 +60,17 @@ public class ConcurrentClassLoaderTest extends TestCase
         final CountDownLatch latch = new CountDownLatch(CONCURRENCY_LEVEL);
         final AtomicInteger doneCount = new AtomicInteger();
         for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
-            new Thread()
-            {
-                public void run()
-                {
-                    try {
-                        latch.countDown();
-                        latch.await();
-                        bundle.loadClass("com.sun.this.class.does.not.exist.but.asking.for.it.must.not.block");
-                    } catch (Exception e) {
-                        // ignore
-                    } finally {
-                        doneCount.incrementAndGet();
-                    }
+            new Thread(() -> {
+                try {
+                    latch.countDown();
+                    latch.await();
+                    bundle.loadClass("com.sun.this.class.does.not.exist.but.asking.for.it.must.not.block");
+                } catch (Exception e) {
+                    // ignore
+                } finally {
+                    doneCount.incrementAndGet();
                 }
-            }.start();
+            }).start();
         }
 
         // Wait for 1 minute for all threads to catch up
@@ -108,7 +105,7 @@ public class ConcurrentClassLoaderTest extends TestCase
 
     private static Framework createFramework(File cacheDir)
     {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put(Constants.FRAMEWORK_SYSTEMPACKAGES, "org.osgi.framework; version=1.4.0,"
                 + "org.osgi.service.packageadmin; version=1.2.0,"
                 + "org.osgi.service.startlevel; version=1.1.0,"
@@ -130,7 +127,7 @@ public class ConcurrentClassLoaderTest extends TestCase
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
         os.close();

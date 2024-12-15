@@ -18,6 +18,11 @@
  */
 package org.apache.felix.framework;
 
+import org.apache.felix.framework.cache.Content;
+import org.apache.felix.framework.cache.JarContent;
+import org.apache.felix.framework.util.FelixConstants;
+import org.osgi.framework.PackagePermission;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,10 +48,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
-import org.apache.felix.framework.cache.Content;
-import org.apache.felix.framework.cache.JarContent;
-import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.PackagePermission;
 
 public class BundleProtectionDomain extends ProtectionDomain
 {
@@ -65,13 +66,13 @@ public class BundleProtectionDomain extends ProtectionDomain
         {
             m_root = root;
 
-            List entries = new ArrayList();
+            List<String> entries = new ArrayList<>();
 
             int count = 0;
             String manifest = null;
-            for (Enumeration e = m_root.getEntries(); e != null && e.hasMoreElements();)
+            for (Enumeration<String> e = m_root.getEntries(); e != null && e.hasMoreElements();)
             {
-                String entry = (String) e.nextElement();
+                String entry = e.nextElement();
                 if (entry.endsWith("/"))
                 {
                     // ignore
@@ -166,12 +167,10 @@ public class BundleProtectionDomain extends ProtectionDomain
             }
             else
             {
-                InputStream in = null;
-                try
+                try (InputStream in = m_root.getEntryAsStream(path))
                 {
-                    in = m_root.getEntryAsStream(path);
 
-                    if (in == null)
+                    if ( in == null )
                     {
                         throw new IOException("Missing entry");
                     }
@@ -187,20 +186,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                         m_output.write(buffer, 0, c);
                     }
                 }
-                finally
-                {
-                    if (in != null)
-                    {
-                        try
-                        {
-                            in.close();
-                        }
-                        catch (Exception ex)
-                        {
-                            // Not much we can do
-                        }
-                    }
-                }
+                // Not much we can do
             }
 
             m_output.closeEntry();
@@ -229,12 +215,12 @@ public class BundleProtectionDomain extends ProtectionDomain
 
     private static final class RevisionAsJarURL extends URLStreamHandler
     {
-        private final WeakReference m_revision;
+        private final WeakReference<BundleRevisionImpl> m_revision;
         private volatile URL url;
 
         private RevisionAsJarURL(BundleRevisionImpl revision)
         {
-            m_revision = new WeakReference(revision);
+            m_revision = new WeakReference<>(revision);
         }
 
         @Override
@@ -243,7 +229,7 @@ public class BundleProtectionDomain extends ProtectionDomain
             if (url != null) {
                 return url.openConnection();
             }
-            BundleRevisionImpl revision = (BundleRevisionImpl) m_revision.get();
+            BundleRevisionImpl revision = m_revision.get();
 
             if (revision != null)
             {
@@ -323,13 +309,7 @@ public class BundleProtectionDomain extends ProtectionDomain
 
             if (System.getSecurityManager() != null)
             {
-                property = (String) AccessController.doPrivileged(new PrivilegedAction<String>(){
-                    @Override
-                    public String run()
-                    {
-                        return getUseCachedURLProperty(revision);
-                    }
-                });
+                property = AccessController.doPrivileged((PrivilegedAction<String>) () -> getUseCachedURLProperty(revision));
             }
             else
             {
@@ -400,7 +380,7 @@ public class BundleProtectionDomain extends ProtectionDomain
                 RevisionAsJarURL.create(revision),
                 (Certificate[]) certificates),
             null, null, null);
-        m_revision = new WeakReference<BundleRevisionImpl>(revision);
+        m_revision = new WeakReference<>(revision);
         m_hashCode = revision.hashCode();
         m_toString = "[" + revision + "]";
     }

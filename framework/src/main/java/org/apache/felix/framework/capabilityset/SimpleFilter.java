@@ -124,9 +124,9 @@ public class SimpleFilter
     private static String toString(List list)
     {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < list.size(); i++)
+        for (Object o : list)
         {
-            sb.append(list.get(i).toString());
+            sb.append(o.toString());
         }
         return sb.toString();
     }
@@ -178,7 +178,7 @@ public class SimpleFilter
     {
         int idx = skipWhitespace(filter, 0);
 
-        if ((filter == null) || (filter.length() == 0) || (idx >= filter.length()))
+        if ((filter == null) || (filter.isEmpty()) || (idx >= filter.length()))
         {
             throw new IllegalArgumentException("Null or empty filter.");
         }
@@ -188,7 +188,7 @@ public class SimpleFilter
         }
 
         SimpleFilter sf = null;
-        List stack = new ArrayList();
+        List<Object> stack = new ArrayList<>();
         boolean isEscaped = false;
         while (idx < filter.length())
         {
@@ -209,11 +209,11 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.AND));
+                        stack.add(0, new SimpleFilter(null, new ArrayList<>(), SimpleFilter.AND));
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else if (filter.charAt(idx) == '|')
@@ -222,11 +222,11 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.OR));
+                        stack.add(0, new SimpleFilter(null, new ArrayList<>(), SimpleFilter.OR));
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else if (filter.charAt(idx) == '!')
@@ -235,16 +235,16 @@ public class SimpleFilter
                     if (filter.charAt(peek) == '(')
                     {
                         idx = peek - 1;
-                        stack.add(0, new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT));
+                        stack.add(0, new SimpleFilter(null, new ArrayList<>(), SimpleFilter.NOT));
                     }
                     else
                     {
-                        stack.add(0, new Integer(idx));
+                        stack.add(0, idx);
                     }
                 }
                 else
                 {
-                    stack.add(0, new Integer(idx));
+                    stack.add(0, idx);
                 }
             }
             else if (!isEscaped && (filter.charAt(idx) == ')'))
@@ -264,21 +264,14 @@ public class SimpleFilter
                 else if (!stack.isEmpty() && (stack.get(0) instanceof SimpleFilter))
                 {
                     ((List) ((SimpleFilter) stack.get(0)).m_value).add(
-                        SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx));
+                        SimpleFilter.subfilter(filter, (Integer) top, idx));
                 }
                 else
                 {
-                    sf = SimpleFilter.subfilter(filter, ((Integer) top).intValue(), idx);
+                    sf = SimpleFilter.subfilter(filter, (Integer) top, idx);
                 }
             }
-            else if (!isEscaped && (filter.charAt(idx) == '\\'))
-            {
-                isEscaped = true;
-            }
-            else
-            {
-                isEscaped = false;
-            }
+            else isEscaped = !isEscaped && (filter.charAt(idx) == '\\');
 
             idx = skipWhitespace(filter, idx + 1);
         }
@@ -369,8 +362,8 @@ public class SimpleFilter
             String valueStr = filter.substring(startIdx, endIdx);
             List<String> values = parseSubstring(valueStr);
             if ((values.size() == 2)
-                && (values.get(0).length() == 0)
-                && (values.get(1).length() == 0))
+                && (values.get(0).isEmpty())
+                && (values.get(1).isEmpty()))
             {
                 op = PRESENT;
             }
@@ -386,7 +379,7 @@ public class SimpleFilter
 
     public static List<String> parseSubstring(String value)
     {
-        List<String> pieces = new ArrayList();
+        List<String> pieces = new ArrayList<>();
         StringBuilder ss = new StringBuilder();
         // int kind = SIMPLE; // assume until proven otherwise
         boolean wasStar = false; // indicates last piece was a star
@@ -522,14 +515,7 @@ loop:   for (int i = 0; i < len; i++)
             // string ends with it.
             if (i == (len - 1))
             {
-                if (s.endsWith(piece) && (s.length() >= (index + piece.length())))
-                {
-                    result = true;
-                }
-                else
-                {
-                    result = false;
-                }
+                result = s.endsWith(piece) && (s.length() >= (index + piece.length()));
                 break loop;
             }
 
@@ -577,7 +563,7 @@ loop:   for (int i = 0; i < len; i++)
         // Rather than building a filter string to be parsed into a SimpleFilter,
         // we will just create the parsed SimpleFilter directly.
 
-        List<SimpleFilter> filters = new ArrayList<SimpleFilter>();
+        List<SimpleFilter> filters = new ArrayList<>();
 
         for (Entry<String, Object> entry : attrs.entrySet())
         {
@@ -595,7 +581,7 @@ loop:   for (int i = 0; i < len; i++)
                 else
                 {
                     SimpleFilter not =
-                        new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                        new SimpleFilter(null, new ArrayList<>(), SimpleFilter.NOT);
                     ((List) not.getValue()).add(
                         new SimpleFilter(
                             entry.getKey(),
@@ -617,7 +603,7 @@ loop:   for (int i = 0; i < len; i++)
                     else
                     {
                         SimpleFilter not =
-                            new SimpleFilter(null, new ArrayList(), SimpleFilter.NOT);
+                            new SimpleFilter(null, new ArrayList<>(), SimpleFilter.NOT);
                         ((List) not.getValue()).add(
                             new SimpleFilter(
                                 entry.getKey(),

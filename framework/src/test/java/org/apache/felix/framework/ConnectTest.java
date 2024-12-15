@@ -18,11 +18,27 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.apache.felix.framework.util.StringMap;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
+import org.osgi.framework.connect.ConnectContent;
+import org.osgi.framework.connect.ConnectModule;
+import org.osgi.framework.connect.ModuleConnector;
+import org.osgi.framework.launch.Framework;
+import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.wiring.FrameworkWiring;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,24 +50,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 
-
-import junit.framework.TestCase;
-import org.apache.felix.framework.util.StringMap;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
-import org.osgi.framework.Version;
-import org.osgi.framework.connect.ConnectContent;
-import org.osgi.framework.connect.ModuleConnector;
-import org.osgi.framework.connect.ConnectModule;
-import org.osgi.framework.launch.Framework;
-import org.osgi.framework.namespace.PackageNamespace;
-import org.osgi.framework.wiring.BundleRevision;
-import org.osgi.framework.wiring.BundleWiring;
-import org.osgi.framework.wiring.FrameworkWiring;
-
 public class ConnectTest extends TestCase
 {
     public void testSimpleConnect() throws Exception
@@ -61,7 +59,7 @@ public class ConnectTest extends TestCase
         cacheDir.mkdirs();
         String cache = cacheDir.getPath();
 
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -71,7 +69,7 @@ public class ConnectTest extends TestCase
         Framework framework = null;
         try
         {
-            final AtomicReference<String> version = new AtomicReference<String>("1.0.0");
+            final AtomicReference<String> version = new AtomicReference<>("1.0.0");
             ModuleConnector connectFactory = new ModuleConnector()
             {
                 @Override
@@ -149,7 +147,7 @@ public class ConnectTest extends TestCase
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.foo");
                                     headers.put(Constants.BUNDLE_VERSION, version.get());
@@ -228,7 +226,7 @@ public class ConnectTest extends TestCase
                                 @Override
                                 public Optional<Map<String, String>> getHeaders()
                                 {
-                                    Map<String, String> headers = new HashMap<String, String>();
+                                    Map<String, String> headers = new HashMap<>();
                                     headers.put(Constants.BUNDLE_MANIFESTVERSION, "2");
                                     headers.put(Constants.BUNDLE_SYMBOLICNAME, "connect.extension");
                                     headers.put(Constants.BUNDLE_VERSION, "1.0.0");
@@ -304,14 +302,7 @@ public class ConnectTest extends TestCase
 
             final CountDownLatch latch = new CountDownLatch(1);
 
-            framework.adapt(FrameworkWiring.class).refreshBundles(Arrays.asList(b), new FrameworkListener()
-            {
-                @Override
-                public void frameworkEvent(FrameworkEvent event)
-                {
-                    latch.countDown();
-                }
-            });
+            framework.adapt(FrameworkWiring.class).refreshBundles(Arrays.asList(b), event -> latch.countDown());
 
             latch.await(1, TimeUnit.SECONDS);
 
@@ -346,7 +337,7 @@ public class ConnectTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
 
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);

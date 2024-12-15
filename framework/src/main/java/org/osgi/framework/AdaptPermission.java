@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A bundle's authority to adapt an object to a type.
@@ -88,7 +89,7 @@ public final class AdaptPermission extends BasicPermission {
 
 	/**
 	 * Creates a new granted {@code AdaptPermission} object.
-	 * 
+	 * <p>
 	 * This constructor must only be used to create a permission that is going
 	 * to be checked.
 	 * <p>
@@ -360,7 +361,7 @@ public final class AdaptPermission extends BasicPermission {
 
 	/**
 	 * Determines the equality of two {@code AdaptPermission} objects.
-	 * 
+	 * <p>
 	 * This method checks that specified permission has the same name and
 	 * {@code AdaptPermission} actions as this {@code AdaptPermission} object.
 	 * 
@@ -382,7 +383,7 @@ public final class AdaptPermission extends BasicPermission {
 
 		AdaptPermission cp = (AdaptPermission) obj;
 
-		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && ((bundle == cp.bundle) || ((bundle != null) && bundle.equals(cp.bundle)));
+		return (action_mask == cp.action_mask) && getName().equals(cp.getName()) && (Objects.equals(bundle, cp.bundle));
 	}
 
 	/**
@@ -437,25 +438,22 @@ public final class AdaptPermission extends BasicPermission {
 		if (result != null) {
 			return result;
 		}
-		final Map<String, Object> map = new HashMap<String, Object>(5);
+		final Map<String, Object> map = new HashMap<>(5);
 		map.put("adaptClass", getName());
 		if (bundle != null) {
-			AccessController.doPrivileged(new PrivilegedAction<Void>() {
-				@Override
-				public Void run() {
-					map.put("id", Long.valueOf(bundle.getBundleId()));
-					map.put("location", bundle.getLocation());
-					String name = bundle.getSymbolicName();
-					if (name != null) {
-						map.put("name", name);
-					}
-					SignerProperty signer = new SignerProperty(bundle);
-					if (signer.isBundleSigned()) {
-						map.put("signer", signer);
-					}
-					return null;
-				}
-			});
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                map.put("id", bundle.getBundleId());
+                map.put("location", bundle.getLocation());
+                String name = bundle.getSymbolicName();
+                if (name != null) {
+                    map.put("name", name);
+                }
+                SignerProperty signer = new SignerProperty(bundle);
+                if (signer.isBundleSigned()) {
+                    map.put("signer", signer);
+                }
+                return null;
+            });
 		}
 		return properties = map;
 	}
@@ -491,7 +489,7 @@ final class AdaptPermissionCollection extends PermissionCollection {
 	 * Create an empty AdaptPermissions object.
 	 */
 	public AdaptPermissionCollection() {
-		permissions = new HashMap<String, AdaptPermission>();
+		permissions = new HashMap<>();
 		all_allowed = false;
 	}
 
@@ -597,7 +595,7 @@ final class AdaptPermissionCollection extends PermissionCollection {
 	 */
 	@Override
 	public synchronized Enumeration<Permission> elements() {
-		List<Permission> all = new ArrayList<Permission>(permissions.values());
+		List<Permission> all = new ArrayList<>(permissions.values());
 		return Collections.enumeration(all);
 	}
 

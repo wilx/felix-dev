@@ -18,14 +18,14 @@
  */
 package org.apache.felix.framework;
 
-import java.util.Map;
-
 import org.osgi.framework.connect.ModuleConnector;
 import org.osgi.framework.launch.Framework;
 
+import java.util.Map;
+
 public class FrameworkFactory implements org.osgi.framework.launch.FrameworkFactory, org.osgi.framework.connect.ConnectFrameworkFactory
 {
-    public Framework newFramework(Map configuration)
+    public Framework newFramework(Map<String, String> configuration)
     {
         return new Felix(configuration);
     }

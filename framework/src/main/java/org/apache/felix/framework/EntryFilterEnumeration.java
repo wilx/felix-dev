@@ -18,12 +18,18 @@
  */
 package org.apache.felix.framework;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
 import org.apache.felix.framework.util.Util;
 import org.osgi.framework.wiring.BundleRevision;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 class EntryFilterEnumeration implements Enumeration
 {
@@ -35,8 +41,8 @@ class EntryFilterEnumeration implements Enumeration
     private final List<String> m_filePattern;
     private final boolean m_recurse;
     private final boolean m_isURLValues;
-    private final Set<String> m_dirEntries = new HashSet();
-    private final List<Object> m_nextEntries = new ArrayList(2);
+    private final Set<String> m_dirEntries = new HashSet<>();
+    private final List<Object> m_nextEntries = new ArrayList<>(2);
 
     public EntryFilterEnumeration(
         BundleRevision revision, boolean includeFragments, String path,
@@ -50,14 +56,14 @@ class EntryFilterEnumeration implements Enumeration
         }
         else
         {
-            m_revisions = new ArrayList(1);
+            m_revisions = new ArrayList<>(1);
         }
         m_revisions.add(0, m_revision);
-        m_enumerations = new ArrayList(m_revisions.size());
-        for (int i = 0; i < m_revisions.size(); i++)
+        m_enumerations = new ArrayList<>(m_revisions.size());
+        for (BundleRevision mRevision : m_revisions)
         {
-            m_enumerations.add(((BundleRevisionImpl) m_revisions.get(i)).getContent() != null ?
-                ((BundleRevisionImpl) m_revisions.get(i)).getContent().getEntries() : null);
+            m_enumerations.add(((BundleRevisionImpl) mRevision).getContent() != null ?
+                ((BundleRevisionImpl) mRevision).getContent().getEntries() : null);
         }
         m_recurse = recurse;
         m_isURLValues = isURLValues;
@@ -68,12 +74,12 @@ class EntryFilterEnumeration implements Enumeration
             throw new IllegalArgumentException("The path for findEntries() cannot be null.");
         }
         // Strip leading '/' if present.
-        if ((path.length() > 0) && (path.charAt(0) == '/'))
+        if ((!path.isEmpty()) && (path.charAt(0) == '/'))
         {
             path = path.substring(1);
         }
         // Add a '/' to the end if not present.
-        if ((path.length() > 0) && (path.charAt(path.length() - 1) != '/'))
+        if ((!path.isEmpty()) && (path.charAt(path.length() - 1) != '/'))
         {
             path = path + "/";
         }

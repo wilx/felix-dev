@@ -18,19 +18,7 @@
  */
 package org.apache.felix.framework;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-
 import junit.framework.TestCase;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -40,6 +28,18 @@ import org.osgi.framework.wiring.BundleRevision;
 import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.resource.Capability;
 import org.osgi.resource.Resource;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 public class RequirementsCapabilitiesTest extends TestCase
 {
@@ -60,7 +60,7 @@ public class RequirementsCapabilitiesTest extends TestCase
 
         String cache = cacheDir.getPath();
 
-        Map<String,String> params = new HashMap<String, String>();
+        Map<String,String> params = new HashMap<>();
         params.put("felix.cache.profiledir", cache);
         params.put("felix.cache.dir", cache);
         params.put(Constants.FRAMEWORK_STORAGE, cache);
@@ -108,32 +108,32 @@ public class RequirementsCapabilitiesTest extends TestCase
         List<Capability> bwbCaps = bbr.getCapabilities("osgi.wiring.bundle");
         assertEquals(1, bwbCaps.size());
 
-        Map<String, Object> expectedBWBAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWBAttrs = new HashMap<>();
         expectedBWBAttrs.put("osgi.wiring.bundle", "cap.bundle");
         expectedBWBAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWBCap = new TestCapability("osgi.wiring.bundle",
-                expectedBWBAttrs, Collections.<String, String>emptyMap());
+                expectedBWBAttrs, Collections.emptyMap());
         assertCapsEquals(expectedBWBCap, bwbCaps.get(0));
 
         List<Capability> bwhCaps = bbr.getCapabilities("osgi.wiring.host");
         assertEquals(1, bwhCaps.size());
 
-        Map<String, Object> expectedBWHAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWHAttrs = new HashMap<>();
         expectedBWHAttrs.put("osgi.wiring.host", "cap.bundle");
         expectedBWHAttrs.put("bundle-version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWHCap = new TestCapability("osgi.wiring.host",
-                expectedBWHAttrs, Collections.<String, String>emptyMap());
+                expectedBWHAttrs, Collections.emptyMap());
         assertCapsEquals(expectedBWHCap, bwhCaps.get(0));
 
         List<Capability> bwiCaps = bbr.getCapabilities("osgi.identity");
         assertEquals(1, bwiCaps.size());
 
-        Map<String, Object> expectedBWIAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedBWIAttrs = new HashMap<>();
         expectedBWIAttrs.put("osgi.identity", "cap.bundle");
         expectedBWIAttrs.put("type", "osgi.bundle");
         expectedBWIAttrs.put("version", Version.parseVersion("1.2.3.Blah"));
         Capability expectedBWICap = new TestCapability("osgi.identity",
-                expectedBWIAttrs, Collections.<String, String>emptyMap());
+                expectedBWIAttrs, Collections.emptyMap());
         assertCapsEquals(expectedBWICap, bwiCaps.get(0));
 
         assertEquals("The Bundle should not directly expose osgi.wiring.package",
@@ -145,23 +145,23 @@ public class RequirementsCapabilitiesTest extends TestCase
         List<Capability> fwpCaps = fbr.getCapabilities("osgi.wiring.package");
         assertEquals(1, fwpCaps.size());
 
-        Map<String, Object> expectedFWAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFWAttrs = new HashMap<>();
         expectedFWAttrs.put("osgi.wiring.package", "org.foo.bar");
         expectedFWAttrs.put("version", Version.parseVersion("2"));
         expectedFWAttrs.put("bundle-symbolic-name", "cap.frag");
         expectedFWAttrs.put("bundle-version", Version.parseVersion("1.0.0"));
         Capability expectedFWCap = new TestCapability("osgi.wiring.package",
-                expectedFWAttrs, Collections.<String, String>emptyMap());
+                expectedFWAttrs, Collections.emptyMap());
         assertCapsEquals(expectedFWCap, fwpCaps.get(0));
 
         List<Capability> fiCaps = fbr.getCapabilities("osgi.identity");
         assertEquals(1, fiCaps.size());
-        Map<String, Object> expectedFIAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFIAttrs = new HashMap<>();
         expectedFIAttrs.put("osgi.identity", "cap.frag");
         expectedFIAttrs.put("type", "osgi.fragment");
         expectedFIAttrs.put("version", Version.parseVersion("1.0.0"));
         Capability expectedFICap = new TestCapability("osgi.identity",
-                expectedFIAttrs, Collections.<String, String>emptyMap());
+                expectedFIAttrs, Collections.emptyMap());
         assertCapsEquals(expectedFICap, fiCaps.get(0));
 
         // Start the bundle. This will make the BundleWiring available on both the bundle and the fragment
@@ -207,12 +207,12 @@ public class RequirementsCapabilitiesTest extends TestCase
 
         List<Capability> feCaps = fbr.getCapabilities("osgi.identity");
         assertEquals(1, feCaps.size());
-        Map<String, Object> expectedFEAttrs = new HashMap<String, Object>();
+        Map<String, Object> expectedFEAttrs = new HashMap<>();
         expectedFEAttrs.put("osgi.identity", "fram.ext");
         expectedFEAttrs.put("type", "osgi.fragment");
         expectedFEAttrs.put("version", Version.parseVersion("1.2.3.test"));
         Capability expectedFICap = new TestCapability("osgi.identity",
-                expectedFEAttrs, Collections.<String, String>emptyMap());
+                expectedFEAttrs, Collections.emptyMap());
         assertCapsEquals(expectedFICap, feCaps.get(0));
     }
 
@@ -220,7 +220,7 @@ public class RequirementsCapabilitiesTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
         os.close();

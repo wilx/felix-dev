@@ -63,7 +63,7 @@ abstract class AbstractTracked<S, T, R> {
 	 * the customizer causes the service to be unregistered, notification to the
 	 * nested call to untrack that the service was unregistered can be made to
 	 * the track method.
-	 * 
+	 * <p>
 	 * Since the ArrayList implementation is not synchronized, all access to
 	 * this list must be protected by the same synchronized object for
 	 * thread-safety.
@@ -74,7 +74,7 @@ abstract class AbstractTracked<S, T, R> {
 
 	/**
 	 * true if the tracked object is closed.
-	 * 
+	 * <p>
 	 * This field is volatile because it is set by one thread and read by
 	 * another.
 	 */
@@ -86,11 +86,11 @@ abstract class AbstractTracked<S, T, R> {
 	 * is necessary since the initial set of tracked items are not "announced"
 	 * by events and therefore the event which makes the item untracked could be
 	 * delivered before we track the item.
-	 * 
+	 * <p>
 	 * An item must not be in both the initial and adding lists at the same
 	 * time. An item must be moved from the initial list to the adding list
 	 * "atomically" before we begin tracking it.
-	 * 
+	 * <p>
 	 * Since the LinkedList implementation is not synchronized, all access to
 	 * this list must be protected by the same synchronized object for
 	 * thread-safety.
@@ -103,17 +103,17 @@ abstract class AbstractTracked<S, T, R> {
 	 * AbstractTracked constructor.
 	 */
 	AbstractTracked() {
-		tracked = new HashMap<S, T>();
+		tracked = new HashMap<>();
 		trackingCount = 0;
-		adding = new ArrayList<S>(6);
-		initial = new LinkedList<S>();
+		adding = new ArrayList<>(6);
+		initial = new LinkedList<>();
 		closed = false;
 	}
 
 	/**
 	 * Set initial list of items into tracker before events begin to be
 	 * received.
-	 * 
+	 * <p>
 	 * This method must be called from Tracker's open method while synchronized
 	 * on this object in the same synchronized block as the add listener call.
 	 * 
@@ -139,7 +139,7 @@ abstract class AbstractTracked<S, T, R> {
 	/**
 	 * Track the initial list of items. This is called after events can begin to
 	 * be received.
-	 * 
+	 * <p>
 	 * This method must be called from Tracker's open method while not
 	 * synchronized on this object after the add listener call.
 	 * 
@@ -148,7 +148,7 @@ abstract class AbstractTracked<S, T, R> {
 		while (true) {
 			S item;
 			synchronized (this) {
-				if (closed || (initial.size() == 0)) {
+				if (closed || (initial.isEmpty())) {
 					/*
 					 * if there are no more initial items
 					 */
@@ -404,7 +404,7 @@ abstract class AbstractTracked<S, T, R> {
 
 	/**
 	 * Returns the tracking count for this {@code ServiceTracker} object.
-	 * 
+	 * <p>
 	 * The tracking count is initialized to 0 when this object is opened. Every
 	 * time an item is added, modified or removed from this object the tracking
 	 * count is incremented.

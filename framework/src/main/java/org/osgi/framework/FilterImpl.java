@@ -423,16 +423,16 @@ abstract class FilterImpl implements Filter {
 				return compare_Long(((Number) value1).longValue());
 			}
 			if (value1 instanceof Character) {
-				return compare_Character(((Character) value1).charValue());
+				return compare_Character((Character) value1);
 			}
 			if (value1 instanceof Float) {
-				return compare_Float(((Float) value1).floatValue());
+				return compare_Float((Float) value1);
 			}
 			if (value1 instanceof Double) {
-				return compare_Double(((Double) value1).doubleValue());
+				return compare_Double((Double) value1);
 			}
 			if (value1 instanceof Boolean) {
-				return compare_Boolean(((Boolean) value1).booleanValue());
+				return compare_Boolean((Boolean) value1);
 			}
 			if (value1 instanceof Comparable< ? >) {
 				@SuppressWarnings("unchecked")
@@ -722,7 +722,7 @@ abstract class FilterImpl implements Filter {
 
 		@Override
 		boolean compare_Boolean(boolean boolval) {
-			boolean boolval2 = convert(Boolean.class, Boolean::valueOf).booleanValue();
+			boolean boolval2 = convert(Boolean.class, Boolean::valueOf);
 			return comparison(Boolean.compare(boolval, boolval2));
 		}
 
@@ -741,7 +741,7 @@ abstract class FilterImpl implements Filter {
 		boolean compare_Double(double doubleval) {
 			double doubleval2;
 			try {
-				doubleval2 = convert(Double.class, Double::valueOf).doubleValue();
+				doubleval2 = convert(Double.class, Double::valueOf);
 			} catch (IllegalArgumentException e) {
 				return false;
 			}
@@ -752,7 +752,7 @@ abstract class FilterImpl implements Filter {
 		boolean compare_Float(float floatval) {
 			float floatval2;
 			try {
-				floatval2 = convert(Float.class, Float::valueOf).floatValue();
+				floatval2 = convert(Float.class, Float::valueOf);
 			} catch (IllegalArgumentException e) {
 				return false;
 			}
@@ -763,7 +763,7 @@ abstract class FilterImpl implements Filter {
 		boolean compare_Long(long longval) {
 			long longval2;
 			try {
-				longval2 = convert(Long.class, Long::valueOf).longValue();
+				longval2 = convert(Long.class, Long::valueOf);
 			} catch (IllegalArgumentException e) {
 				return false;
 			}

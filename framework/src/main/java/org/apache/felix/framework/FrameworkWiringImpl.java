@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.osgi.framework.AdminPermission;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleCapability;
@@ -38,7 +37,7 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
     private final ServiceRegistry m_registry;
     private final List<Collection<Bundle>> m_requests = new ArrayList();
     private final List<FrameworkListener[]> m_requestListeners
-        = new ArrayList<FrameworkListener[]>();
+        = new ArrayList<>();
     private ServiceRegistration<PackageAdmin> m_paReg;
     private Thread m_thread = null;
 
@@ -88,11 +87,11 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
 
     public void refreshBundles(Collection<Bundle> bundles, FrameworkListener... listeners)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(
+            sm.checkPermission(
                 new AdminPermission(m_felix, AdminPermission.RESOLVE));
         }
         synchronized (m_requests)
@@ -114,11 +113,11 @@ class FrameworkWiringImpl implements FrameworkWiring, Runnable
 
     public boolean resolveBundles(Collection<Bundle> bundles)
     {
-        Object sm = System.getSecurityManager();
+        SecurityManager sm = System.getSecurityManager();
 
         if (sm != null)
         {
-            ((SecurityManager) sm).checkPermission(
+            sm.checkPermission(
                 new AdminPermission(m_felix, AdminPermission.RESOLVE));
         }
 

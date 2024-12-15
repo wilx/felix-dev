@@ -16,6 +16,9 @@
 
 package org.osgi.framework;
 
+import org.osgi.annotation.versioning.ProviderType;
+import org.osgi.framework.wiring.FrameworkWiring;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +28,6 @@ import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import org.osgi.annotation.versioning.ProviderType;
-import org.osgi.framework.wiring.FrameworkWiring;
 
 /**
  * An installed bundle in the Framework.
@@ -658,7 +659,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * Manifest header names are case-insensitive. The methods of the returned
 	 * {@code Dictionary} object must operate on header names in a
 	 * case-insensitive manner.
-	 * 
+	 * <p>
 	 * If a Manifest header value starts with &quot;%&quot;, it must be
 	 * localized according to the default locale. If no localization is found
 	 * for a header value, the header value without the leading &quot;%&quot; is
@@ -811,7 +812,7 @@ public interface Bundle extends Comparable<Bundle> {
 
 	/**
 	 * Find the specified resource from this bundle's class loader.
-	 * 
+	 * <p>
 	 * This bundle's class loader is called to search for the specified
 	 * resource. If this bundle's state is {@code INSTALLED}, this method must
 	 * attempt to resolve this bundle before attempting to get the specified
@@ -866,7 +867,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * {@code Cs} and {@code Vs} are the specified locale (language, country,
 	 * variant) and {@code Ld}, {@code Cd} and {@code Vd} are the default locale
 	 * (language, country, variant).
-	 * 
+	 * <p>
 	 * If {@code null} is specified as the locale string, the header values must
 	 * be localized using the default locale. If the empty string (&quot;&quot;)
 	 * is specified as the locale string, the header values must not be
@@ -946,7 +947,7 @@ public interface Bundle extends Comparable<Bundle> {
 
 	/**
 	 * Find the specified resources from this bundle's class loader.
-	 * 
+	 * <p>
 	 * This bundle's class loader is called to search for the specified
 	 * resources. If this bundle's state is {@code INSTALLED}, this method must
 	 * attempt to resolve this bundle before attempting to get the specified
@@ -1041,7 +1042,7 @@ public interface Bundle extends Comparable<Bundle> {
 	 * Returns entries in this bundle and its attached fragments. This bundle's
 	 * class loader is not used to search for entries. Only the contents of this
 	 * bundle and its attached fragments are searched for the specified entries.
-	 * 
+	 * <p>
 	 * If this bundle's state is {@code INSTALLED}, this method must attempt to
 	 * resolve this bundle before attempting to find entries.
 	 * 

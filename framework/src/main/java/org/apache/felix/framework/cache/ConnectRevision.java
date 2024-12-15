@@ -18,23 +18,23 @@
  */
 package org.apache.felix.framework.cache;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.StringMap;
 import org.apache.felix.framework.util.WeakZipFileFactory;
 import org.osgi.framework.connect.ConnectContent;
 import org.osgi.framework.connect.ConnectModule;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
+
 public class ConnectRevision extends BundleArchiveRevision
 {
     private final WeakZipFileFactory m_zipFactory;
     private final ConnectContent m_module;
 
-    public ConnectRevision(Logger logger, Map configMap, WeakZipFileFactory zipFactory,
+    public ConnectRevision(Logger logger, Map<String, Object> configMap, WeakZipFileFactory zipFactory,
         File revisionRootDir, String location, ConnectModule module) throws Exception
     {
         super(logger, configMap, revisionRootDir, location);
@@ -67,7 +67,7 @@ public class ConnectRevision extends BundleArchiveRevision
                 {
                     byte[] manifest = entry.getBytes();
 
-                    return Optional.of((Map<String, String>) (Map) BundleCache.getMainAttributes(new StringMap(), new java.io.ByteArrayInputStream(manifest), manifest.length));
+                    return Optional.of((Map<String, String>) BundleCache.getMainAttributes(new StringMap(), new java.io.ByteArrayInputStream(manifest), manifest.length));
                 }
                 catch (Exception e)
                 {

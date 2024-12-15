@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.lang.ref.SoftReference;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,22 +88,22 @@ public class BundleCache
     public static final String CACHE_ROOTDIR_PROP = "felix.cache.rootdir";
     public static final String CACHE_LOCKING_PROP = "felix.cache.locking";
     public static final String CACHE_FILELIMIT_PROP = "felix.cache.filelimit";
-    private static final ThreadLocal m_defaultBuffer = new ThreadLocal();
+    private static final ThreadLocal<SoftReference<byte[]>> m_defaultBuffer = new ThreadLocal<>();
     private static volatile int DEFAULT_BUFFER = 1024 * 64;
 
-    private static transient final String CACHE_DIR_NAME = "felix-cache";
-    private static transient final String CACHE_ROOTDIR_DEFAULT = ".";
-    private static transient final String CACHE_LOCK_NAME = "cache.lock";
-    static transient final String BUNDLE_DIR_PREFIX = "bundle";
+    private static final String CACHE_DIR_NAME = "felix-cache";
+    private static final String CACHE_ROOTDIR_DEFAULT = ".";
+    private static final String CACHE_LOCK_NAME = "cache.lock";
+    static final String BUNDLE_DIR_PREFIX = "bundle";
 
     private static final SecureAction m_secureAction = new SecureAction();
 
     private final Logger m_logger;
-    private final Map m_configMap;
+    private final Map<String, Object> m_configMap;
     private final WeakZipFileFactory m_zipFactory;
     private final Object m_lock;
 
-    public BundleCache(Logger logger, Map configMap)
+    public BundleCache(Logger logger, Map<String, Object> configMap)
         throws Exception
     {
         m_logger = logger;
@@ -245,22 +246,22 @@ public class BundleCache
         // Get the buffer for this thread if there is one already otherwise,
         // create one of size DEFAULT_BUFFER (64K) if the manifest is less
         // than 64k or of the size of the manifest.
-        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        SoftReference<byte[]> ref = m_defaultBuffer.get();
         byte[] bytes = null;
         if (ref != null)
         {
-            bytes = (byte[]) ref.get();
+            bytes = ref.get();
         }
 
         if (bytes == null)
         {
-            bytes = new byte[size + 1 > DEFAULT_BUFFER ? size + 1 : DEFAULT_BUFFER];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            bytes = new byte[Math.max(size + 1, DEFAULT_BUFFER)];
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
         else if (size + 1 > bytes.length)
         {
             bytes = new byte[size + 1];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
 
         // Now read in the manifest in one go into the bytes array.
@@ -314,7 +315,7 @@ public class BundleCache
             // and skip the :<blank> that follows it.
             if ((key == null) && (bytes[i] == ':'))
             {
-                key = new String(bytes, last, (current - last), "UTF-8");
+                key = new String(bytes, last, (current - last), StandardCharsets.UTF_8);
                 if ((i + 1 < size) && (bytes[i + 1] == ' '))
                 {
                     last = current + 1;
@@ -335,7 +336,7 @@ public class BundleCache
                 }
                 // Otherwise, parse the value and add it to the map (we throw an
                 // exception if we don't have a key or the key already exist.
-                String value = new String(bytes, last, (current - last), "UTF-8");
+                String value = new String(bytes, last, (current - last), StandardCharsets.UTF_8);
 
                 if (key == null)
                 {
@@ -412,7 +413,7 @@ public class BundleCache
 
         // Create the existing bundle archives in the directory, if any exist.
         File cacheDir = determineCacheDir(m_configMap);
-        List archiveList = new ArrayList();
+        List<BundleArchive> archiveList = new ArrayList<>();
         File[] children = getSecureAction().listDirectory(cacheDir);
         for (int i = 0; (children != null) && (i < children.length); i++)
         {
@@ -438,8 +439,7 @@ public class BundleCache
             }
         }
 
-        return (BundleArchive[])
-            archiveList.toArray(new BundleArchive[archiveList.size()]);
+        return archiveList.toArray(new BundleArchive[archiveList.size()]);
     }
 
     public BundleArchive create(long id, int startLevel, String location, InputStream is, ModuleConnector connectFactory)
@@ -449,16 +449,14 @@ public class BundleCache
 
         // Construct archive root directory.
         File archiveRootDir =
-            new File(cacheDir, BUNDLE_DIR_PREFIX + Long.toString(id));
+            new File(cacheDir, BUNDLE_DIR_PREFIX + id);
 
         try
         {
             // Create the archive and add it to the list of archives.
-            BundleArchive ba =
-                new BundleArchive(
-                    m_logger, m_configMap, m_zipFactory, connectFactory, archiveRootDir,
-                    id, startLevel, location, is);
-            return ba;
+            return new BundleArchive(
+                m_logger, m_configMap, m_zipFactory, connectFactory, archiveRootDir,
+                id, startLevel, location, is);
         }
         catch (Exception ex)
         {
@@ -526,17 +524,17 @@ public class BundleCache
     {
         // Get the buffer for this thread if there is one already otherwise,
         // create one of size DEFAULT_BUFFER
-        SoftReference ref = (SoftReference) m_defaultBuffer.get();
+        SoftReference<byte[]> ref = m_defaultBuffer.get();
         byte[] bytes = null;
         if (ref != null)
         {
-            bytes = (byte[]) ref.get();
+            bytes = ref.get();
         }
 
         if (bytes == null)
         {
             bytes = new byte[DEFAULT_BUFFER];
-            m_defaultBuffer.set(new SoftReference(bytes));
+            m_defaultBuffer.set(new SoftReference<>(bytes));
         }
 
         OutputStream os = null;
@@ -582,7 +580,7 @@ public class BundleCache
     // Private methods.
     //
 
-    private static File determineCacheDir(Map configMap)
+    private static File determineCacheDir(Map<String, Object> configMap)
     {
         File cacheDir;
 
@@ -624,9 +622,9 @@ public class BundleCache
             File[] files = getSecureAction().listDirectory(target);
             if (files != null)
             {
-                for (int i = 0; i < files.length; i++)
+                for (File file : files)
                 {
-                    deleteDirectoryTreeRecursive(files[i]);
+                    deleteDirectoryTreeRecursive(file);
                 }
             }
         }

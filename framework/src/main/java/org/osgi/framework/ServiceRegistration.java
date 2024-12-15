@@ -47,7 +47,7 @@ public interface ServiceRegistration<S> {
 	 *         has already been unregistered.
 	 * @return {@code ServiceReference} object.
 	 */
-	public ServiceReference<S> getReference();
+    ServiceReference<S> getReference();
 
 	/**
 	 * Updates the properties associated with a service.
@@ -75,7 +75,7 @@ public interface ServiceRegistration<S> {
 	 * @throws IllegalArgumentException If {@code properties} contains case
 	 *         variants of the same key name.
 	 */
-	public void setProperties(Dictionary<String, ?> properties);
+    void setProperties(Dictionary<String, ?> properties);
 
 	/**
 	 * Unregisters a service. Remove a {@code ServiceRegistration} object from
@@ -109,5 +109,5 @@ public interface ServiceRegistration<S> {
 	 * @see BundleContext#ungetService(ServiceReference)
 	 * @see ServiceFactory#ungetService(Bundle, ServiceRegistration, Object)
 	 */
-	public void unregister();
+    void unregister();
 }

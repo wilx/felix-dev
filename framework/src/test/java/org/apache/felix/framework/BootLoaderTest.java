@@ -18,10 +18,17 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.apache.felix.framework.util.FelixConstants;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.launch.Framework;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,11 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import junit.framework.TestCase;
-import org.apache.felix.framework.util.FelixConstants;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
-import org.osgi.framework.launch.Framework;
 
 /**
  * Test to ensure behaviour of "felix.bootdelegation.classloaders" contract.
@@ -109,7 +111,7 @@ public class BootLoaderTest extends TestCase
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
         os.close();

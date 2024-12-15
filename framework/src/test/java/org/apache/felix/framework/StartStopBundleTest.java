@@ -18,25 +18,25 @@
  */
 package org.apache.felix.framework;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-
 import junit.framework.TestCase;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 
 public class StartStopBundleTest extends TestCase
 {
@@ -72,20 +72,16 @@ public class StartStopBundleTest extends TestCase
         try {
             final Bundle bundle = f.getBundleContext().installBundle(bundleFile.toURI().toString());
 
-            new Thread()
-            {
-                public void run()
+            new Thread(() -> {
+                try
                 {
-                    try
-                    {
-                        bundle.start();
-                    }
-                    catch (BundleException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    bundle.start();
                 }
-            }.start();
+                catch (BundleException e)
+                {
+                    e.printStackTrace();
+                }
+            }).start();
             Thread.sleep(DELAY / 4);
             long t0 = System.currentTimeMillis();
             bundle.stop();
@@ -96,20 +92,16 @@ public class StartStopBundleTest extends TestCase
 
             bundle.start();
 
-            new Thread()
-            {
-                public void run()
+            new Thread(() -> {
+                try
                 {
-                    try
-                    {
-                        bundle.stop();
-                    }
-                    catch (BundleException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    bundle.stop();
                 }
-            }.start();
+                catch (BundleException e)
+                {
+                    e.printStackTrace();
+                }
+            }).start();
             Thread.sleep(DELAY / 4);
             t0 = System.currentTimeMillis();
             bundle.start();
@@ -128,7 +120,7 @@ public class StartStopBundleTest extends TestCase
     {
         File f = File.createTempFile("felix-bundle", ".jar", tempDir);
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         mf.getMainAttributes().putValue("Manifest-Version", "1.0");
         mf.getMainAttributes().putValue(Constants.BUNDLE_ACTIVATOR, TestBundleActivator.class.getName());
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);

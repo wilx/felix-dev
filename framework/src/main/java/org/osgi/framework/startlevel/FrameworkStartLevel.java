@@ -39,7 +39,7 @@ import org.osgi.framework.FrameworkListener;
 public interface FrameworkStartLevel extends BundleReference {
 	/**
 	 * Return the active start level value of the Framework.
-	 * 
+	 * <p>
 	 * If the Framework is in the process of changing the start level this
 	 * method must return the active start level if this differs from the
 	 * requested start level.
@@ -66,7 +66,7 @@ public interface FrameworkStartLevel extends BundleReference {
 	 * If the specified start level is higher than the active start level, the
 	 * Framework will continue to increase the start level until the Framework
 	 * has reached the specified start level.
-	 * 
+	 * <p>
 	 * At each intermediate start level value on the way to and including the
 	 * target start level, the Framework must:
 	 * <ol>
@@ -87,7 +87,7 @@ public interface FrameworkStartLevel extends BundleReference {
 	 * If the specified start level is lower than the active start level, the
 	 * Framework will continue to decrease the start level until the Framework
 	 * has reached the specified start level.
-	 * 
+	 * <p>
 	 * At each intermediate start level value on the way to and including the
 	 * specified start level, the framework must:
 	 * <ol>

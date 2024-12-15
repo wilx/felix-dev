@@ -66,7 +66,7 @@ public class DefaultMetaTypeProvider implements MetaTypeProvider
         // copy from holder
         if ( metadata.getObjectClassDefinitions() == null )
         {
-            objectClassDefinitions = Collections.EMPTY_MAP;
+            objectClassDefinitions = Collections.emptyMap();
         }
         else
         {

@@ -18,11 +18,22 @@
  */
 package org.apache.felix.framework;
 
+import junit.framework.TestCase;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.hooks.weaving.WeavingHook;
+import org.osgi.framework.hooks.weaving.WovenClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,20 +43,6 @@ import java.util.concurrent.Callable;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-
-import org.junit.Assert;
-import org.junit.Assume;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleReference;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.hooks.weaving.WeavingHook;
-import org.osgi.framework.hooks.weaving.WovenClass;
-
-import junit.framework.TestCase;
 
 public class CycleDetectionWithWovenClassTest extends TestCase {
     
@@ -179,8 +176,8 @@ public class CycleDetectionWithWovenClassTest extends TestCase {
     }
     
     @FunctionalInterface
-    private static interface ThrowingConsumer<T> {
-        public void accept(T t) throws Exception;
+    private interface ThrowingConsumer<T> {
+        void accept(T t) throws Exception;
     }
     
     
@@ -215,7 +212,7 @@ public class CycleDetectionWithWovenClassTest extends TestCase {
         Class[] classesCombined;
         
         if (classes.length > 0) {
-            List<Class> list = new ArrayList<Class>(Arrays.asList(classes));
+            List<Class> list = new ArrayList<>(Arrays.asList(classes));
             list.add(activator);
             classesCombined = list.toArray(new Class[0]);
         }
@@ -232,7 +229,7 @@ public class CycleDetectionWithWovenClassTest extends TestCase {
         File f = File.createTempFile("felix-bundle", ".jar");
         f.deleteOnExit();
 
-        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes("utf-8")));
+        Manifest mf = new Manifest(new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8)));
         JarOutputStream os = new JarOutputStream(new FileOutputStream(f), mf);
 
         for (Class clazz : classes)

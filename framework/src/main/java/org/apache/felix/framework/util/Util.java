@@ -45,7 +45,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -122,22 +121,22 @@ public class Util
                 StringBuilder eecap = new StringBuilder(", osgi.ee; osgi.ee=\"OSGi/Minimum\"; version:List<Version>=\"1.0,1.1,1.2\",osgi.ee; osgi.ee=\"JavaSE\"; version:List<Version>=\"1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(i));
+                    eecap.append(',').append(i);
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact1\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(i));
+                    eecap.append(',').append(i);
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact2\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(i));
+                    eecap.append(',').append(i);
                 }
                 eecap.append("\",osgi.ee; osgi.ee=\"JavaSE/compact3\"; version:List<Version>=\"1.8,9");
                 for (int i = 10; i <= version.getMajor();i++)
                 {
-                    eecap.append(',').append(Integer.toString(i));
+                    eecap.append(',').append(i);
                 }
                 eecap.append("\"");
 
@@ -145,7 +144,7 @@ public class Util
 
                 for (int i = version.getMajor(); i > 9;i--)
                 {
-                    ee.append("JavaSE-").append(Integer.toString(i)).append(',');
+                    ee.append("JavaSE-").append(i).append(',');
                 }
 
                 ee.append("JavaSE-9,JavaSE-1.8,JavaSE-1.7,JavaSE-1.6,J2SE-1.5,J2SE-1.4,J2SE-1.3,J2SE-1.2,JRE-1.1,JRE-1.0,OSGi/Minimum-1.2,OSGi/Minimum-1.1,OSGi/Minimum-1.0");
@@ -157,11 +156,11 @@ public class Util
                 properties.put("felix.detect.jpms", "jpms");
             }
 
-            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? version.getMinor() < 8 ? version.getMinor() : 8 : 6)) : Integer.toString(version.getMajor()));
+            properties.put("felix.detect.java.specification.version", version.getMajor() < 9 ? ("1." + (version.getMinor() > 6 ? Math.min(version.getMinor(), 8) : 6)) : Integer.toString(version.getMajor()));
 
             if (version.getMajor() < 9)
             {
-                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? version.getMinor() < 8 ? version.getMinor() : 8 : 6));
+                properties.put("felix.detect.java.version", String.format("0.0.0.JavaSE_001_%03d", version.getMinor() > 6 ? Math.min(version.getMinor(), 8) : 6));
             }
             else
             {
@@ -197,7 +196,7 @@ public class Util
                 moduleLayer = c_ModuleLayer.getMethod("boot").invoke(null);
             }
 
-            for (Object module : ((Iterable) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
+            for (Object module : ((Iterable<Object>) c_ModuleLayer.getMethod("modules").invoke(moduleLayer)))
             {
                 if (!self.equals(module))
                 {
@@ -238,8 +237,8 @@ public class Util
         Map<String,Set<String>> exports = null;
         if (!MODULES_MAP.isEmpty())
         {
-            Set<String> modules = new TreeSet<String>();
-            exports = new HashMap<String, Set<String>>();
+            Set<String> modules = new TreeSet<>();
+            exports = new HashMap<>();
             for (Map.Entry<String, Set<String>> module : MODULES_MAP.entrySet())
             {
                 Object name = module.getKey();
@@ -253,11 +252,11 @@ public class Util
                 }
             }
 
-            String modulesString = "";
+            StringBuilder modulesString = new StringBuilder();
             for (String module : modules) {
-                modulesString += "${" + module + "}";
+                modulesString.append("${").append(module).append("}");
             }
-            properties.put("jre-jpms", modulesString);
+            properties.put("jre-jpms", modulesString.toString());
         }
 
         return exports;
@@ -274,7 +273,7 @@ public class Util
 
     public static Map<String, String> getPropertiesWithPrefix(Properties props, String prefix)
     {
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
 
         Set<String> propertySet = props.stringPropertyNames();
 
@@ -295,10 +294,10 @@ public class Util
     public static Properties toProperties(Map map)
     {
         Properties result = new Properties();
-        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();)
+        for (Object o : map.entrySet())
         {
-            Entry entry = (Entry) iter.next();
-            if (entry.getKey() != null && entry.getValue() != null)
+            Entry entry = (Entry) o;
+            if ( entry.getKey() != null && entry.getValue() != null )
             {
                 result.setProperty(entry.getKey().toString(), entry.getValue().toString());
             }
@@ -453,10 +452,10 @@ public class Util
             // one of the class's implemented interface
             // class loaders.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
+            for (Class ifc : ifcs)
             {
-                loadedClass = loadClassUsingClass(ifcs[i], name, action);
-                if (loadedClass != null)
+                loadedClass = loadClassUsingClass(ifc, name, action);
+                if ( loadedClass != null )
                 {
                     return loadedClass;
                 }
@@ -482,9 +481,10 @@ public class Util
             // one of the class's implemented interface
             // is the name.
             Class[] ifcs = clazz.getInterfaces();
-            for (int i = 0; i < ifcs.length; i++)
+            for (Class ifc : ifcs)
             {
-                if (checkImplementsWithName(ifcs[i], name)) {
+                if ( checkImplementsWithName(ifc, name) )
+                {
                     return true;
                 }
             }
@@ -504,7 +504,7 @@ public class Util
      * @return <tt>true</tt> if the requesting bundle is able to case
      *         the service object to a known type.
     **/
-    public static boolean isServiceAssignable(Bundle requester, ServiceReference ref)
+    public static boolean isServiceAssignable(Bundle requester, ServiceReference<?> ref)
     {
         // Boolean flag.
         boolean allow = true;
@@ -539,7 +539,7 @@ public class Util
                 {
                     if (result == null)
                     {
-                        result = new ArrayList<BundleRequirement>();
+                        result = new ArrayList<>();
                     }
                     result.add(req);
                 }
@@ -590,14 +590,14 @@ public class Util
         return null;
     }
 
-    private static final byte encTab[] = { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
+    private static final byte[] encTab = { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46,
         0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50, 0x51, 0x52,
         0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x61, 0x62, 0x63, 0x64,
         0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, 0x70,
         0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x30, 0x31,
         0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x2b, 0x2f };
 
-    private static final byte decTab[] = { -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    private static final byte[] decTab = { -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1,
         -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1,
@@ -619,26 +619,12 @@ public class Util
     **/
     public static String encode(byte[] in, int len) throws IOException
     {
-        ByteArrayOutputStream baos = null;
-        ByteArrayInputStream bais = null;
-        try
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ByteArrayInputStream bais = new ByteArrayInputStream(in))
         {
-            baos = new ByteArrayOutputStream();
-            bais = new ByteArrayInputStream(in);
             encode(bais, baos, len);
             // ASCII byte array to String
-            return (new String(baos.toByteArray()));
-        }
-        finally
-        {
-            if (baos != null)
-            {
-                baos.close();
-            }
-            if (bais != null)
-            {
-                bais.close();
-            }
+            return (baos.toString());
         }
     }
 
@@ -819,7 +805,7 @@ public class Util
         // value.
         val = val.substring(0, startDelim)
             + substValue
-            + val.substring(stopDelim + DELIM_STOP.length(), val.length());
+            + val.substring(stopDelim + DELIM_STOP.length());
 
         // Now perform substitution again, since there could still
         // be substitutions to make.
@@ -848,7 +834,7 @@ public class Util
                 {
                     if (entry.getKey().equalsIgnoreCase(Constants.SINGLETON_DIRECTIVE))
                     {
-                        return Boolean.valueOf(entry.getValue());
+                        return Boolean.parseBoolean(entry.getValue());
                     }
                 }
                 // Can only have one bundle capability, so break.
@@ -894,7 +880,7 @@ public class Util
                         // Create array list if needed.
                         if (fragments.isEmpty())
                         {
-                            fragments = new ArrayList<BundleRevision>();
+                            fragments = new ArrayList<>();
                         }
                         fragments.add(w.getRequirerWiring().getRevision());
                     }
@@ -1090,8 +1076,8 @@ public class Util
         return manifest;
     }
 
-    private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
-    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+    private static final List EMPTY_LIST = Collections.EMPTY_LIST;
+    private static final Map EMPTY_MAP = Collections.emptyMap();
 
     public static <T> List<T> newImmutableList(List<T> list)
     {

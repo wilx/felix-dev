@@ -65,7 +65,7 @@ public interface BundleActivator {
 	 *         listeners, unregister all services registered by this bundle, and
 	 *         release all services used by this bundle.
 	 */
-	public void start(BundleContext context) throws Exception;
+    void start(BundleContext context) throws Exception;
 
 	/**
 	 * Called when this bundle is stopped so the Framework can perform the
@@ -84,5 +84,5 @@ public interface BundleActivator {
 	 *         listeners, unregister all services registered by the bundle, and
 	 *         release all services used by the bundle.
 	 */
-	public void stop(BundleContext context) throws Exception;
+    void stop(BundleContext context) throws Exception;
 }

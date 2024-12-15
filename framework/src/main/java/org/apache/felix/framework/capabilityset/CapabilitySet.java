@@ -18,6 +18,14 @@
  */
 package org.apache.felix.framework.capabilityset;
 
+import org.apache.felix.framework.util.SecureAction;
+import org.apache.felix.framework.util.StringComparator;
+import org.apache.felix.framework.wiring.BundleCapabilityImpl;
+import org.osgi.framework.Version;
+import org.osgi.framework.VersionRange;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.resource.Capability;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -25,7 +33,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,18 +42,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.apache.felix.framework.util.SecureAction;
-import org.apache.felix.framework.util.StringComparator;
-import org.apache.felix.framework.wiring.BundleCapabilityImpl;
-import org.osgi.framework.Version;
-import org.osgi.framework.VersionRange;
-import org.osgi.framework.wiring.BundleCapability;
-import org.osgi.resource.Capability;
-
 public class CapabilitySet
 {
     private final SortedMap<String, Map<Object, Set<BundleCapability>>> m_indices; // Should also be concurrent!
-    private final Set<Capability> m_capSet = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
+    private final Set<Capability> m_capSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final static SecureAction m_secureAction = new SecureAction();
 
     public void dump()
@@ -81,13 +80,13 @@ public class CapabilitySet
     public CapabilitySet(final List<String> indexProps, final boolean caseSensitive)
     {
         m_indices = (caseSensitive)
-            ? new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>()
-            : new ConcurrentSkipListMap<String, Map<Object, Set<BundleCapability>>>(
-                StringComparator.COMPARATOR);
+            ? new ConcurrentSkipListMap<>()
+            : new ConcurrentSkipListMap<>(
+            StringComparator.COMPARATOR);
         for (int i = 0; (indexProps != null) && (i < indexProps.size()); i++)
         {
             m_indices.put(
-                indexProps.get(i), new ConcurrentHashMap<Object, Set<BundleCapability>>());
+                indexProps.get(i), new ConcurrentHashMap<>());
         }
     }
 
@@ -128,7 +127,7 @@ public class CapabilitySet
     private void indexCapability(
         ConcurrentMap<Object, Set<BundleCapability>> index, BundleCapability cap, Object capValue)
     {
-        Set<BundleCapability> caps = Collections.newSetFromMap(new ConcurrentHashMap<BundleCapability, Boolean>());
+        Set<BundleCapability> caps = Collections.newSetFromMap(new ConcurrentHashMap<>());
         Set<BundleCapability> prevval = index.putIfAbsent(capValue, caps);
         if (prevval != null)
             caps = prevval;
@@ -192,7 +191,7 @@ public class CapabilitySet
 
     private Set<Capability> match(Set<Capability> caps, final SimpleFilter sf)
     {
-        Set<Capability> matches = Collections.newSetFromMap(new ConcurrentHashMap<Capability, Boolean>());
+        Set<Capability> matches = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
         if (sf.getOperation() == SimpleFilter.MATCH_ALL)
         {
@@ -205,7 +204,7 @@ public class CapabilitySet
             // We can short-circuit the AND operation if there are no
             // remaining capabilities.
             final List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; (caps.size() > 0) && (i < sfs.size()); i++)
+            for (int i = 0; (!caps.isEmpty()) && (i < sfs.size()); i++)
             {
                 matches = match(caps, sfs.get(i));
                 caps = matches;
@@ -216,9 +215,9 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter simpleFilter : sfs)
             {
-                matches.addAll(match(caps, sfs.get(i)));
+                matches.addAll(match(caps, simpleFilter));
             }
         }
         else if (sf.getOperation() == SimpleFilter.NOT)
@@ -227,9 +226,9 @@ public class CapabilitySet
             // For OR we calculate the union of each subfilter.
             matches.addAll(caps);
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter simpleFilter : sfs)
             {
-                matches.removeAll(match(caps, sfs.get(i)));
+                matches.removeAll(match(caps, simpleFilter));
             }
         }
         else
@@ -249,13 +248,12 @@ public class CapabilitySet
             }
             else
             {
-                for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
+                for (Capability cap : caps)
                 {
-                    Capability cap = it.next();
                     Object lhs = cap.getAttributes().get(sf.getName());
-                    if (lhs != null)
+                    if ( lhs != null )
                     {
-                        if (compare(lhs, sf.getValue(), sf.getOperation()))
+                        if ( compare(lhs, sf.getValue(), sf.getOperation()) )
                         {
                             matches.add(cap);
                         }
@@ -308,9 +306,9 @@ public class CapabilitySet
             // Evaluate each subfilter against the remaining capabilities.
             // For OR we calculate the union of each subfilter.
             List<SimpleFilter> sfs = (List<SimpleFilter>) sf.getValue();
-            for (int i = 0; i < sfs.size(); i++)
+            for (SimpleFilter simpleFilter : sfs)
             {
-                matched = !(matchesInternal(cap, sfs.get(i)));
+                matched = !(matchesInternal(cap, simpleFilter));
             }
         }
         else
@@ -329,14 +327,7 @@ public class CapabilitySet
     private static Set<Capability> matchMandatory(
         Set<Capability> caps, SimpleFilter sf)
     {
-        for (Iterator<Capability> it = caps.iterator(); it.hasNext(); )
-        {
-            Capability cap = it.next();
-            if (!matchMandatory(cap, sf))
-            {
-                it.remove();
-            }
-        }
+        caps.removeIf(cap -> !matchMandatory(cap, sf));
         return caps;
     }
 
@@ -362,12 +353,11 @@ public class CapabilitySet
         }
         else if (sf.getOperation() == SimpleFilter.AND)
         {
-            List list = (List) sf.getValue();
-            for (int i = 0; i < list.size(); i++)
+            List<SimpleFilter> list = (List<SimpleFilter>) sf.getValue();
+            for (SimpleFilter sf2 : list)
             {
-                SimpleFilter sf2 = (SimpleFilter) list.get(i);
-                if ((sf2.getName() != null)
-                    && sf2.getName().equals(attrName))
+                if ( (sf2.getName() != null)
+                    && sf2.getName().equals(attrName) )
                 {
                     return true;
                 }
@@ -407,7 +397,7 @@ public class CapabilitySet
                 //Do nothing will check later if rhs is null
             }
 
-            if(rhs != null && rhs instanceof VersionRange)
+            if( rhs instanceof VersionRange )
             {
                 return ((VersionRange)rhs).includes((Version)lhs);
             }
@@ -516,9 +506,9 @@ public class CapabilitySet
         // of the collection until a match is found.
         if (lhs instanceof Collection)
         {
-            for (Iterator iter = ((Collection) lhs).iterator(); iter.hasNext(); )
+            for (Object o : (Collection) lhs)
             {
-                if (compare(iter.next(), rhsUnknown, op))
+                if ( compare(o, rhsUnknown, op) )
                 {
                     return true;
                 }
@@ -591,7 +581,7 @@ public class CapabilitySet
             // does not take a string, so handle it separately.
             if (lhs instanceof Character)
             {
-                rhs = new Character(rhsString.charAt(0));
+                rhs = rhsString.charAt(0);
             }
             else if(lhs instanceof Version && rhsString.indexOf(',') >= 0)
             {
@@ -614,7 +604,7 @@ public class CapabilitySet
                         && ((valueOfMethod.getModifiers() & Modifier.STATIC) > 0))
                     {
                         m_secureAction.setAccesssible(valueOfMethod);
-                        rhs = valueOfMethod.invoke(null, new Object[] { rhsString });
+                        rhs = valueOfMethod.invoke(null, rhsString);
                     }
                 }
                 catch (Exception ex)
@@ -624,9 +614,9 @@ public class CapabilitySet
 
                 if (rhs == null)
                 {
-                    Constructor ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
+                    Constructor<?> ctor = m_secureAction.getConstructor(lhs.getClass(), STRING_CLASS);
                     m_secureAction.setAccesssible(ctor);
-                    rhs = ctor.newInstance(new Object[] { rhsString });
+                    rhs = ctor.newInstance(rhsString);
                 }
             }
         }
@@ -650,10 +640,10 @@ public class CapabilitySet
      * @param array An array of primitive types.
      * @return An corresponding array using pritive wrapper objects.
     **/
-    private static List convertArrayToList(Object array)
+    private static List<Object> convertArrayToList(Object array)
     {
         int len = Array.getLength(array);
-        List list = new ArrayList(len);
+        List<Object> list = new ArrayList<>(len);
         for (int i = 0; i < len; i++)
         {
             list.add(Array.get(array, i));

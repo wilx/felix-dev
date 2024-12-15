@@ -48,10 +48,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -61,7 +59,7 @@ public class ManifestParser
 
     private final Logger m_logger;
     private final Map<String, Object> m_configMap;
-    private final Map<String, Object> m_headerMap;
+    private final Map<String, String> m_headerMap;
     private volatile int m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
     private volatile String m_activationIncludeDir;
     private volatile String m_activationExcludeDir;
@@ -99,7 +97,7 @@ public class ManifestParser
         return foo;
     };
 
-    public ManifestParser(Logger logger, Map<String, Object> configMap, BundleRevision owner, Map<String, Object> headerMap)
+    public ManifestParser(Logger logger, Map<String, Object> configMap, BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
         m_logger = logger;
@@ -115,7 +113,7 @@ public class ManifestParser
         }
 
         // Create lists to hold capabilities and requirements.
-        List<BundleCapabilityImpl> capList = new ArrayList<BundleCapabilityImpl>();
+        List<BundleCapabilityImpl> capList = new ArrayList<>();
 
         //
         // Parse bundle version.
@@ -127,7 +125,7 @@ public class ManifestParser
             try
             {
                 m_bundleVersion = Version.parseVersion(
-                    (String) headerMap.get(Constants.BUNDLE_VERSION));
+                    headerMap.get(Constants.BUNDLE_VERSION));
             }
             catch (RuntimeException ex)
             {
@@ -171,7 +169,7 @@ public class ManifestParser
                 if (!attachment.equalsIgnoreCase(Constants.FRAGMENT_ATTACHMENT_NEVER))
                 {
                     Map<String, Object> hostAttrs =
-                        new HashMap<String, Object>(bundleCap.getAttributes());
+                        new HashMap<>(bundleCap.getAttributes());
                     Object value = hostAttrs.remove(BundleRevision.BUNDLE_NAMESPACE);
                     hostAttrs.put(BundleRevision.HOST_NAMESPACE, value);
                     capList.add(new BundleCapabilityImpl(
@@ -207,7 +205,7 @@ public class ManifestParser
         //
 
         List<ParsedHeaderClause> rbClauses =
-            parseStandardHeader((String) headerMap.get(Constants.REQUIRE_BUNDLE));
+            parseStandardHeader(headerMap.get(Constants.REQUIRE_BUNDLE));
         rbClauses = normalizeRequireClauses(m_logger, rbClauses, getManifestVersion());
         List<BundleRequirementImpl> rbReqs = convertRequires(rbClauses, owner);
 
@@ -216,7 +214,7 @@ public class ManifestParser
         //
 
         List<ParsedHeaderClause> importClauses =
-            parseStandardHeader((String) headerMap.get(Constants.IMPORT_PACKAGE));
+            parseStandardHeader(headerMap.get(Constants.IMPORT_PACKAGE));
         importClauses = normalizeImportClauses(m_logger, importClauses, getManifestVersion());
         List<BundleRequirement> importReqs = convertImports(importClauses, owner);
 
@@ -225,7 +223,7 @@ public class ManifestParser
         //
 
         List<ParsedHeaderClause> dynamicClauses =
-            parseStandardHeader((String) headerMap.get(Constants.DYNAMICIMPORT_PACKAGE));
+            parseStandardHeader(headerMap.get(Constants.DYNAMICIMPORT_PACKAGE));
         dynamicClauses = normalizeDynamicImportClauses(m_logger, dynamicClauses, getManifestVersion());
         List<BundleRequirement> dynamicReqs = convertImports(dynamicClauses, owner);
 
@@ -234,7 +232,7 @@ public class ManifestParser
         //
 
         List<ParsedHeaderClause> requireClauses =
-            parseStandardHeader((String) headerMap.get(Constants.REQUIRE_CAPABILITY));
+            parseStandardHeader(headerMap.get(Constants.REQUIRE_CAPABILITY));
         importClauses = normalizeCapabilityClauses(
             m_logger, requireClauses, getManifestVersion());
         List<BundleRequirement> requireReqs = convertRequireCapabilities(importClauses, owner);
@@ -243,14 +241,14 @@ public class ManifestParser
         // Parse Bundle-RequiredExecutionEnvironment.
         //
         List<BundleRequirement> breeReqs =
-            parseBreeHeader((String) headerMap.get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT), owner);
+            parseBreeHeader(headerMap.get(Constants.BUNDLE_REQUIREDEXECUTIONENVIRONMENT), owner);
 
         //
         // Parse Export-Package.
         //
 
         List<ParsedHeaderClause> exportClauses =
-            parseStandardHeader((String) headerMap.get(Constants.EXPORT_PACKAGE));
+            parseStandardHeader(headerMap.get(Constants.EXPORT_PACKAGE));
         exportClauses = normalizeExportClauses(logger, exportClauses,
             getManifestVersion(), m_bundleSymbolicName, m_bundleVersion, owner instanceof BundleRevisionImpl && ((BundleRevisionImpl) owner).getContent() instanceof ConnectContentContent);
         List<BundleCapability> exportCaps = convertExports(exportClauses, owner);
@@ -260,7 +258,7 @@ public class ManifestParser
         //
 
         List<ParsedHeaderClause> provideClauses =
-            parseStandardHeader((String) headerMap.get(Constants.PROVIDE_CAPABILITY));
+            parseStandardHeader(headerMap.get(Constants.PROVIDE_CAPABILITY));
         provideClauses = normalizeCapabilityClauses(
             logger, provideClauses, getManifestVersion());
         List<BundleCapability> provideCaps = convertProvideCapabilities(provideClauses, owner);
@@ -276,7 +274,7 @@ public class ManifestParser
             importReqs.addAll(convertImports(implicitClauses, owner));
 
             List<ParsedHeaderClause> allImportClauses =
-                new ArrayList<ParsedHeaderClause>(implicitClauses.size() + importClauses.size());
+                new ArrayList<>(implicitClauses.size() + importClauses.size());
             allImportClauses.addAll(importClauses);
             allImportClauses.addAll(implicitClauses);
 
@@ -291,7 +289,7 @@ public class ManifestParser
         m_libraryClauses =
             parseLibraryStrings(
                 m_logger,
-                parseDelimitedString((String) m_headerMap.get(Constants.BUNDLE_NATIVECODE), ","));
+                parseDelimitedString(m_headerMap.get(Constants.BUNDLE_NATIVECODE), ","));
 
         // Check to see if there was an optional native library clause, which is
         // represented by a null library header; if so, record it and remove it.
@@ -305,21 +303,21 @@ public class ManifestParser
         List<BundleRequirement> nativeCodeReqs = convertNativeCode(owner, m_libraryClauses, m_libraryHeadersOptional);
 
         // Combine all requirements.
-        m_requirements = new ArrayList<BundleRequirement>(
+        m_requirements = new ArrayList<>(
             hostReqs.size() + importReqs.size() + rbReqs.size()
-            + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
-        m_requirements.addAll(hostReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+                + requireReqs.size() + dynamicReqs.size() + breeReqs.size());
+        m_requirements.addAll(hostReqs.stream().map(req -> BundleRequirementImpl.createFrom(req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(importReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
-        m_requirements.addAll(rbReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
+        m_requirements.addAll(rbReqs.stream().map(req -> BundleRequirementImpl.createFrom(req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(requireReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(dynamicReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(breeReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         m_requirements.addAll(nativeCodeReqs.stream().map(req -> BundleRequirementImpl.createFrom((BundleRequirementImpl) req, cache)).collect(Collectors.toList()));
         
         // Combine all capabilities.
-        m_capabilities = new ArrayList<BundleCapability>(
-             capList.size() + exportCaps.size() + provideCaps.size());
-        m_capabilities.addAll(capList.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
+        m_capabilities = new ArrayList<>(
+            capList.size() + exportCaps.size() + provideCaps.size());
+        m_capabilities.addAll(capList.stream().map(cap -> BundleCapabilityImpl.createFrom(cap, cache)).collect(Collectors.toList()));
         m_capabilities.addAll(exportCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
         m_capabilities.addAll(provideCaps.stream().map(cap -> BundleCapabilityImpl.createFrom((BundleCapabilityImpl) cap, cache)).collect(Collectors.toList()));
 
@@ -338,7 +336,7 @@ public class ManifestParser
     {
         // Verify that the values are equals if the package specifies
         // both version and specification-version attributes.
-        Set<String> dupeSet = new HashSet<String>();
+        Set<String> dupeSet = new HashSet<>();
         for (ParsedHeaderClause clause : clauses)
         {
             // Check for "version" and "specification-version" attributes
@@ -390,7 +388,7 @@ public class ManifestParser
                         throw new BundleException("Imporing '.' is invalid.");
                     }
                     // Make sure a package name was specified.
-                    else if (pkgName.length() == 0)
+                    else if ( pkgName.isEmpty() )
                     {
                         throw new BundleException(
                             "Imported package names cannot be zero length.");
@@ -450,15 +448,14 @@ public class ManifestParser
 
         List<ParsedHeaderClause> importClauses = parseStandardHeader(header);
         importClauses = normalizeDynamicImportClauses(logger, importClauses, "2");
-        List<BundleRequirement> reqs = convertImports(importClauses, owner);
-        return reqs;
+        return convertImports(importClauses, owner);
     }
 
     private static List<BundleRequirement> convertImports(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
         // Now convert generic header clauses into requirements.
-        List<BundleRequirement> reqList = new ArrayList<BundleRequirement>();
+        List<BundleRequirement> reqList = new ArrayList<>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -470,7 +467,7 @@ public class ManifestParser
                 // more efficient.
 // TODO: OSGi R4.3 - This is ordering is kind of hacky.
                 // Prepend the package name to the array of attributes.
-                Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                Map<String, Object> newAttrs = new LinkedHashMap<>(attrs.size() + 1);
                 // We want this first from an indexing perspective.
                 newAttrs.put(
                     BundleRevision.PACKAGE_NAMESPACE,
@@ -487,7 +484,7 @@ public class ManifestParser
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
                 Map<String, String> dirs = clause.m_dirs;
-                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                Map<String, String> newDirs = new HashMap<>(dirs.size() + 1);
                 newDirs.putAll(dirs);
                 newDirs.put(
                     Constants.FILTER_DIRECTIVE,
@@ -499,7 +496,7 @@ public class ManifestParser
                         owner,
                         BundleRevision.PACKAGE_NAMESPACE,
                         newDirs,
-                        Collections.EMPTY_MAP,
+                        Collections.emptyMap(),
                         sf));
             }
         }
@@ -582,7 +579,7 @@ public class ManifestParser
         throws BundleException
     {
         // Now convert generic header clauses into requirements.
-        List<BundleRequirement> reqList = new ArrayList<BundleRequirement>();
+        List<BundleRequirement> reqList = new ArrayList<>();
         for (ParsedHeaderClause clause : clauses)
         {
             try
@@ -621,9 +618,9 @@ public class ManifestParser
     
     static List<BundleRequirement> convertNativeCode(BundleRevision owner, List<NativeLibraryClause> nativeLibraryClauses, boolean hasOptionalLibraryDirective)
     {
-        List<BundleRequirement> result = new ArrayList<BundleRequirement>();
+        List<BundleRequirement> result = new ArrayList<>();
         
-        List<SimpleFilter> nativeFilterClauseList = new ArrayList<SimpleFilter>();
+        List<SimpleFilter> nativeFilterClauseList = new ArrayList<>();
         
         if(nativeLibraryClauses != null && !nativeLibraryClauses.isEmpty())
         {
@@ -636,7 +633,7 @@ public class ManifestParser
                 
                 String currentSelectionFilter = clause.getSelectionFilter();
                 
-                List<SimpleFilter> nativeFilterList = new ArrayList<SimpleFilter>();
+                List<SimpleFilter> nativeFilterList = new ArrayList<>();
                 if(osNameArray != null && osNameArray.length > 0)
                 {
                     nativeFilterList.add(buildFilterFromArray(NativeNamespace.CAPABILITY_OSNAME_ATTRIBUTE, osNameArray, SimpleFilter.APPROX));
@@ -669,7 +666,7 @@ public class ManifestParser
                 }
             }
             
-            Map<String, String> requirementDirectives = new HashMap<String, String>();
+            Map<String, String> requirementDirectives = new HashMap<>();
             
             SimpleFilter consolidatedNativeFilter = null;
             
@@ -691,10 +688,10 @@ public class ManifestParser
                 requirementDirectives.put(NativeNamespace.REQUIREMENT_FILTER_DIRECTIVE, consolidatedNativeFilter.toString());
             }
             
-            if(requirementDirectives.size() > 0)
+            if( !requirementDirectives.isEmpty() )
             {
                 result.add(new BundleRequirementImpl(owner, NativeNamespace.NATIVE_NAMESPACE, requirementDirectives,
-                        Collections.<String, Object>emptyMap(),
+                        Collections.emptyMap(),
                         consolidatedNativeFilter));
             }
             
@@ -706,7 +703,7 @@ public class ManifestParser
     private static SimpleFilter buildFilterFromArray(String attributeName, String[] stringArray, int operation)
     {
         SimpleFilter result = null;
-        List<SimpleFilter> filterSet = new ArrayList<SimpleFilter>();
+        List<SimpleFilter> filterSet = new ArrayList<>();
         
         if(stringArray != null)
         {
@@ -762,7 +759,7 @@ public class ManifestParser
                     {
                         clause.m_attrs.put(
                             entry.getKey(),
-                            new Long(clause.m_attrs.get(entry.getKey()).toString().trim()));
+                            Long.valueOf(clause.m_attrs.get(entry.getKey()).toString().trim()));
                     }
                     else if (type.startsWith("List"))
                     {
@@ -786,32 +783,29 @@ public class ManifestParser
 
                         List<String> tokens = parseDelimitedString(
                             clause.m_attrs.get(entry.getKey()).toString(), ",", false);
-                        List<Object> values = new ArrayList<Object>(tokens.size());
+                        List<Object> values = new ArrayList<>(tokens.size());
                         for (String token : tokens)
                         {
-                            if (listType.equals("String"))
+                            switch (listType)
                             {
-                                values.add(token);
-                            }
-                            else if (listType.equals("Double"))
-                            {
-                                values.add(new Double(token.trim()));
-                            }
-                            else if (listType.equals("Version"))
-                            {
-                                values.add(new Version(token.trim()));
-                            }
-                            else if (listType.equals("Long"))
-                            {
-                                values.add(new Long(token.trim()));
-                            }
-                            else
-                            {
-                                throw new BundleException(
-                                    "Unknown Provide-Capability attribute list type for '"
-                                    + entry.getKey()
-                                    + "' : "
-                                    + type);
+                                case "String":
+                                    values.add(token);
+                                    break;
+                                case "Double":
+                                    values.add(Double.valueOf(token.trim()));
+                                    break;
+                                case "Version":
+                                    values.add(new Version(token.trim()));
+                                    break;
+                                case "Long":
+                                    values.add(Long.valueOf(token.trim()));
+                                    break;
+                                default:
+                                    throw new BundleException(
+                                        "Unknown Provide-Capability attribute list type for '"
+                                            + entry.getKey()
+                                            + "' : "
+                                            + type);
                             }
                         }
                         clause.m_attrs.put(
@@ -837,7 +831,7 @@ public class ManifestParser
         List<ParsedHeaderClause> clauses, BundleRevision owner)
         throws BundleException
     {
-        List<BundleCapability> capList = new ArrayList<BundleCapability>();
+        List<BundleCapability> capList = new ArrayList<>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -897,7 +891,7 @@ public class ManifestParser
                     throw new BundleException("Exporing '.' is invalid.");
                 }
                 // Make sure a package name was specified.
-                else if (pkgName.length() == 0)
+                else if ( pkgName.isEmpty() )
                 {
                     throw new BundleException(
                         "Exported package names cannot be zero length.");
@@ -953,7 +947,7 @@ public class ManifestParser
                 clause.m_attrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, bsn);
                 clause.m_attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bv);
             }
-            else if (!mv.equals("2"))
+            else
             {
                 // R3 bundles cannot have directives on their exports.
                 if (!clause.m_dirs.isEmpty())
@@ -997,14 +991,14 @@ public class ManifestParser
     private static List<BundleCapability> convertExports(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
-        List<BundleCapability> capList = new ArrayList<BundleCapability>();
+        List<BundleCapability> capList = new ArrayList<>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String pkgName : clause.m_paths)
             {
                 // Prepend the package name to the array of attributes.
                 Map<String, Object> attrs = clause.m_attrs;
-                Map<String, Object> newAttrs = new HashMap<String, Object>(attrs.size() + 1);
+                Map<String, Object> newAttrs = new HashMap<>(attrs.size() + 1);
                 newAttrs.putAll(attrs);
                 newAttrs.put(
                     BundleRevision.PACKAGE_NAMESPACE,
@@ -1029,9 +1023,9 @@ public class ManifestParser
         return (manifestVersion == null) ? "1" : manifestVersion;
     }
 
-    private static String getManifestVersion(Map<String, Object> headerMap)
+    private static String getManifestVersion(Map<String, String> headerMap)
     {
-        String manifestVersion = (String) headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
+        String manifestVersion = headerMap.get(Constants.BUNDLE_MANIFESTVERSION);
         return (manifestVersion == null) ? null : manifestVersion.trim();
     }
 
@@ -1110,7 +1104,7 @@ public class ManifestParser
             if (clause != null)
             {
                 String[] entries = clause.getLibraryEntries();
-                libs = new ArrayList<NativeLibrary>(entries.length);
+                libs = new ArrayList<>(entries.length);
                 int current = 0;
                 for (int i = 0; i < entries.length; i++)
                 {
@@ -1133,7 +1127,7 @@ public class ManifestParser
         }
         catch (Exception ex)
         {
-            libs = new ArrayList<NativeLibrary>(0);
+            libs = new ArrayList<>(0);
         }
         return libs;
     }
@@ -1150,9 +1144,9 @@ public class ManifestParser
 
     private NativeLibraryClause getSelectedLibraryClause() throws BundleException
     {
-        if ((m_libraryClauses != null) && (m_libraryClauses.size() > 0))
+        if ((m_libraryClauses != null) && (!m_libraryClauses.isEmpty()))
         {
-            List<NativeLibraryClause> clauseList = new ArrayList<NativeLibraryClause>();
+            List<NativeLibraryClause> clauseList = new ArrayList<>();
 
             // Search for matching native clauses.
             for (NativeLibraryClause libraryClause : m_libraryClauses)
@@ -1185,7 +1179,7 @@ public class ManifestParser
             {
                 selected = firstSortedClause(clauseList);
             }
-            return ((NativeLibraryClause) clauseList.get(selected));
+            return clauseList.get(selected);
         }
 
         return null;
@@ -1193,8 +1187,8 @@ public class ManifestParser
 
     private int firstSortedClause(List<NativeLibraryClause> clauseList)
     {
-        ArrayList<String> indexList = new ArrayList<String>();
-        ArrayList<String> selection = new ArrayList<String>();
+        ArrayList<String> indexList = new ArrayList<>();
+        ArrayList<String> selection = new ArrayList<>();
 
         // Init index list
         for (int i = 0; i < clauseList.size(); i++)
@@ -1205,18 +1199,18 @@ public class ManifestParser
         // Select clause with 'osversion' range declared
         // and get back the max floor of 'osversion' ranges.
         Version osVersionRangeMaxFloor = new Version(0, 0, 0);
-        for (int i = 0; i < indexList.size(); i++)
+        for (String string : indexList)
         {
-            int index = Integer.parseInt(indexList.get(i).toString());
-            String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
-            if (osversions != null)
+            int index = Integer.parseInt(string);
+            String[] osversions = clauseList.get(index).getOSVersions();
+            if ( osversions != null )
             {
-                selection.add("" + indexList.get(i));
+                selection.add(string);
             }
             for (int k = 0; (osversions != null) && (k < osversions.length); k++)
             {
                 VersionRange range = new VersionRange(osversions[k]);
-                if ((range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0)
+                if ( (range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0 )
                 {
                     osVersionRangeMaxFloor = range.getLeft();
                 }
@@ -1225,24 +1219,24 @@ public class ManifestParser
 
         if (selection.size() == 1)
         {
-            return Integer.parseInt(selection.get(0).toString());
+            return Integer.parseInt(selection.get(0));
         }
         else if (selection.size() > 1)
         {
             // Keep only selected clauses with an 'osversion'
             // equal to the max floor of 'osversion' ranges.
             indexList = selection;
-            selection = new ArrayList<String>();
-            for (int i = 0; i < indexList.size(); i++)
+            selection = new ArrayList<>();
+            for (String s : indexList)
             {
-                int index = Integer.parseInt(indexList.get(i).toString());
-                String[] osversions = ((NativeLibraryClause) clauseList.get(index)).getOSVersions();
-                for (int k = 0; k < osversions.length; k++)
+                int index = Integer.parseInt(s);
+                String[] osversions = clauseList.get(index).getOSVersions();
+                for (String osversion : osversions)
                 {
-                    VersionRange range = new VersionRange(osversions[k]);
-                    if ((range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0)
+                    VersionRange range = new VersionRange(osversion);
+                    if ( (range.getLeft()).compareTo(osVersionRangeMaxFloor) >= 0 )
                     {
-                        selection.add("" + indexList.get(i));
+                        selection.add(s);
                     }
                 }
             }
@@ -1260,7 +1254,7 @@ public class ManifestParser
         }
         else if (selection.size() == 1)
         {
-            return Integer.parseInt(selection.get(0).toString());
+            return Integer.parseInt(selection.get(0));
         }
         else
         {
@@ -1269,12 +1263,12 @@ public class ManifestParser
         }
 
         // Keep only clauses with 'language' declared.
-        for (int i = 0; i < indexList.size(); i++)
+        for (String s : indexList)
         {
-            int index = Integer.parseInt(indexList.get(i).toString());
-            if (((NativeLibraryClause) clauseList.get(index)).getLanguages() != null)
+            int index = Integer.parseInt(s);
+            if ( clauseList.get(index).getLanguages() != null )
             {
-                selection.add("" + indexList.get(i));
+                selection.add(s);
             }
         }
 
@@ -1285,7 +1279,7 @@ public class ManifestParser
         }
         else
         {
-            return Integer.parseInt(selection.get(0).toString());
+            return Integer.parseInt(selection.get(0));
         }
     }
 
@@ -1293,44 +1287,44 @@ public class ManifestParser
         List<BundleCapability> exports, List<ParsedHeaderClause> imports)
         throws BundleException
     {
-        List<ParsedHeaderClause> clauseList = new ArrayList<ParsedHeaderClause>();
+        List<ParsedHeaderClause> clauseList = new ArrayList<>();
 
         // Since all R3 exports imply an import, add a corresponding
         // requirement for each existing export capability. Do not
         // duplicate imports.
-        Map<String, String> map =  new HashMap<String, String>();
+        Map<String, String> map = new HashMap<>();
         // Add existing imports.
-        for (int impIdx = 0; impIdx < imports.size(); impIdx++)
+        for (ParsedHeaderClause anImport : imports)
         {
-            for (int pathIdx = 0; pathIdx < imports.get(impIdx).m_paths.size(); pathIdx++)
+            for (int pathIdx = 0; pathIdx < anImport.m_paths.size(); pathIdx++)
             {
                 map.put(
-                    imports.get(impIdx).m_paths.get(pathIdx),
-                    imports.get(impIdx).m_paths.get(pathIdx));
+                    anImport.m_paths.get(pathIdx),
+                    anImport.m_paths.get(pathIdx));
             }
         }
         // Add import requirement for each export capability.
-        for (int i = 0; i < exports.size(); i++)
+        for (BundleCapability export : exports)
         {
-            if (map.get(exports.get(i).getAttributes()
-                .get(BundleRevision.PACKAGE_NAMESPACE)) == null)
+            if ( map.get(export.getAttributes()
+                .get(BundleRevision.PACKAGE_NAMESPACE)) == null )
             {
                 // Convert Version to VersionRange.
-                Map<String, Object> attrs = new HashMap<String, Object>();
-                Object version = exports.get(i).getAttributes().get(Constants.VERSION_ATTRIBUTE);
-                if (version != null)
+                Map<String, Object> attrs = new HashMap<>();
+                Object version = export.getAttributes().get(Constants.VERSION_ATTRIBUTE);
+                if ( version != null )
                 {
                     attrs.put(
                         Constants.VERSION_ATTRIBUTE,
                         new VersionRange(version.toString()));
                 }
 
-                List<String> paths = new ArrayList<String>();
+                List<String> paths = new ArrayList<>();
                 paths.add((String)
-                    exports.get(i).getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
+                    export.getAttributes().get(BundleRevision.PACKAGE_NAMESPACE));
                 clauseList.add(
                     new ParsedHeaderClause(
-                        paths, Collections.EMPTY_MAP, attrs, Collections.EMPTY_MAP));
+                        paths, Collections.emptyMap(), attrs, Collections.emptyMap()));
             }
         }
 
@@ -1346,20 +1340,18 @@ public class ManifestParser
         // exports, since export implies import); this is
         // necessary since R3 bundles assumed a single class space,
         // but R4 allows for multiple class spaces.
-        String usesValue = "";
-        for (int i = 0; i < imports.size(); i++)
+        StringBuilder usesValue = new StringBuilder();
+        for (ParsedHeaderClause anImport : imports)
         {
-            for (int pathIdx = 0; pathIdx < imports.get(i).m_paths.size(); pathIdx++)
+            for (int pathIdx = 0; pathIdx < anImport.m_paths.size(); pathIdx++)
             {
-                usesValue = usesValue
-                    + ((usesValue.length() > 0) ? "," : "")
-                    + imports.get(i).m_paths.get(pathIdx);
+                usesValue.append((usesValue.length() > 0) ? "," : "").append(anImport.m_paths.get(pathIdx));
             }
         }
         for (int i = 0; i < exports.size(); i++)
         {
-            Map<String, String> dirs = new HashMap<String, String>(1);
-            dirs.put(Constants.USES_DIRECTIVE, usesValue);
+            Map<String, String> dirs = new HashMap<>(1);
+            dirs.put(Constants.USES_DIRECTIVE, usesValue.toString());
             exports.set(i, new BundleCapabilityImpl(
                 exports.get(i).getRevision(),
                 BundleRevision.PACKAGE_NAMESPACE,
@@ -1370,10 +1362,10 @@ public class ManifestParser
         return exports;
     }
 
-    private static boolean checkExtensionBundle(Map<String, Object> headerMap) throws BundleException
+    private static boolean checkExtensionBundle(Map<String, String> headerMap) throws BundleException
     {
         Object extension = parseExtensionBundleHeader(
-            (String) headerMap.get(Constants.FRAGMENT_HOST));
+            headerMap.get(Constants.FRAGMENT_HOST));
 
         if (extension != null)
         {
@@ -1396,12 +1388,12 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl parseBundleSymbolicName(Logger logger,
-        BundleRevision owner, Map<String, Object> headerMap)
+        BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
         List<ParsedHeaderClause> clauses = normalizeCapabilityClauses(logger, parseStandardHeader(
-            (String) headerMap.get(Constants.BUNDLE_SYMBOLICNAME)), getManifestVersion(headerMap));
-        if (clauses.size() > 0)
+            headerMap.get(Constants.BUNDLE_SYMBOLICNAME)), getManifestVersion(headerMap));
+        if ( !clauses.isEmpty() )
         {
             if (clauses.size() > 1)
             {
@@ -1428,7 +1420,7 @@ public class ManifestParser
                 try
                 {
                     bundleVersion = Version.parseVersion(
-                        (String) headerMap.get(Constants.BUNDLE_VERSION));
+                        headerMap.get(Constants.BUNDLE_VERSION));
                 }
                 catch (RuntimeException ex)
                 {
@@ -1485,7 +1477,7 @@ public class ManifestParser
             }
 
             // Create a require capability and return it.
-            String symName = (String) clauses.get(0).m_paths.get(0);
+            String symName = clauses.get(0).m_paths.get(0);
             clauses.get(0).m_attrs.put(BundleRevision.BUNDLE_NAMESPACE, symName);
             clauses.get(0).m_attrs.put(Constants.BUNDLE_VERSION_ATTRIBUTE, bundleVersion);
             return new BundleCapabilityImpl(
@@ -1499,9 +1491,9 @@ public class ManifestParser
     }
 
     private static BundleCapabilityImpl addIdentityCapability(BundleRevision owner,
-        Map<String, Object> headerMap, BundleCapabilityImpl bundleCap) throws BundleException
+        Map<String, String> headerMap, BundleCapabilityImpl bundleCap) throws BundleException
     {
-        Map<String, Object> attrs = new HashMap<String, Object>(bundleCap.getAttributes());
+        Map<String, Object> attrs = new HashMap<>(bundleCap.getAttributes());
 
         attrs.put(IdentityNamespace.IDENTITY_NAMESPACE,
             bundleCap.getAttributes().get(BundleNamespace.BUNDLE_NAMESPACE));
@@ -1548,17 +1540,17 @@ public class ManifestParser
     }
 
     private static List<BundleRequirementImpl> parseFragmentHost(
-        Logger logger, BundleRevision owner, Map<String, Object> headerMap)
+        Logger logger, BundleRevision owner, Map<String, String> headerMap)
         throws BundleException
     {
-        List<BundleRequirementImpl> reqs = new ArrayList<BundleRequirementImpl>();
+        List<BundleRequirementImpl> reqs = new ArrayList<>();
 
         String mv = getManifestVersion(headerMap);
         if ((mv != null) && mv.equals("2"))
         {
             List<ParsedHeaderClause> clauses = parseStandardHeader(
-                (String) headerMap.get(Constants.FRAGMENT_HOST));
-            if (clauses.size() > 0)
+                headerMap.get(Constants.FRAGMENT_HOST));
+            if ( !clauses.isEmpty() )
             {
                 // Make sure that only one fragment host symbolic name is specified.
                 if (clauses.size() > 1)
@@ -1578,12 +1570,9 @@ public class ManifestParser
                 // it to the proper type.
                 Object value = clauses.get(0).m_attrs.get(Constants.BUNDLE_VERSION_ATTRIBUTE);
                 value = (value == null) ? "0.0.0" : value;
-                if (value != null)
-                {
-                    clauses.get(0).m_attrs.put(
-                        Constants.BUNDLE_VERSION_ATTRIBUTE,
-                        new VersionRange(value.toString()));
-                }
+                clauses.get(0).m_attrs.put(
+                    Constants.BUNDLE_VERSION_ATTRIBUTE,
+                    new VersionRange(value.toString()));
 
                 // Note that we use a linked hash map here to ensure the
                 // host symbolic name is first, which will make indexing
@@ -1591,7 +1580,7 @@ public class ManifestParser
 // TODO: OSGi R4.3 - This is ordering is kind of hacky.
                 // Prepend the host symbolic name to the map of attributes.
                 Map<String, Object> attrs = clauses.get(0).m_attrs;
-                Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                Map<String, Object> newAttrs = new LinkedHashMap<>(attrs.size() + 1);
                 // We want this first from an indexing perspective.
                 newAttrs.put(
                     BundleRevision.HOST_NAMESPACE,
@@ -1608,7 +1597,7 @@ public class ManifestParser
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
                 Map<String, String> dirs = clauses.get(0).m_dirs;
-                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                Map<String, String> newDirs = new HashMap<>(dirs.size() + 1);
                 newDirs.putAll(dirs);
                 newDirs.put(
                     Constants.FILTER_DIRECTIVE,
@@ -1622,8 +1611,8 @@ public class ManifestParser
         }
         else if (headerMap.get(Constants.FRAGMENT_HOST) != null)
         {
-            String s = (String) headerMap.get(Constants.BUNDLE_SYMBOLICNAME);
-            s = (s == null) ? (String) headerMap.get(Constants.BUNDLE_NAME) : s;
+            String s = headerMap.get(Constants.BUNDLE_SYMBOLICNAME);
+            s = (s == null) ? headerMap.get(Constants.BUNDLE_NAME) : s;
             s = (s == null) ? headerMap.toString() : s;
             logger.log(
                 Logger.LOG_WARNING,
@@ -1635,7 +1624,7 @@ public class ManifestParser
 
     private static List<BundleRequirement> parseBreeHeader(String header, BundleRevision owner)
     {
-        List<String> filters = new ArrayList<String>();
+        List<String> filters = new ArrayList<>();
         for (String entry : parseDelimitedString(header, ","))
         {
             List<String> names = parseDelimitedString(entry, "/");
@@ -1713,7 +1702,7 @@ public class ManifestParser
             filters.add(filter);
         }
 
-        if (filters.size() == 0)
+        if ( filters.isEmpty() )
         {
             return Collections.emptyList();
         }
@@ -1737,11 +1726,11 @@ public class ManifestParser
             }
 
             SimpleFilter sf = SimpleFilter.parse(reqFilter);
-            return Collections.<BundleRequirement>singletonList(new BundleRequirementImpl(
+            return Collections.singletonList(new BundleRequirementImpl(
                 owner,
                 ExecutionEnvironmentNamespace.EXECUTION_ENVIRONMENT_NAMESPACE,
                 Collections.singletonMap(ExecutionEnvironmentNamespace.REQUIREMENT_FILTER_DIRECTIVE, reqFilter),
-                Collections.<String, Object>emptyMap(),
+                Collections.emptyMap(),
                 sf));
         }
     }
@@ -1783,7 +1772,7 @@ public class ManifestParser
     private static List<BundleRequirementImpl> convertRequires(
         List<ParsedHeaderClause> clauses, BundleRevision owner)
     {
-        List<BundleRequirementImpl> reqList = new ArrayList<BundleRequirementImpl>();
+        List<BundleRequirementImpl> reqList = new ArrayList<>();
         for (ParsedHeaderClause clause : clauses)
         {
             for (String path : clause.m_paths)
@@ -1795,7 +1784,7 @@ public class ManifestParser
                 // more efficient.
 // TODO: OSGi R4.3 - This is ordering is kind of hacky.
                 // Prepend the symbolic name to the array of attributes.
-                Map<String, Object> newAttrs = new LinkedHashMap<String, Object>(attrs.size() + 1);
+                Map<String, Object> newAttrs = new LinkedHashMap<>(attrs.size() + 1);
                 // We want this first from an indexing perspective.
                 newAttrs.put(
                     BundleRevision.BUNDLE_NAMESPACE,
@@ -1812,7 +1801,7 @@ public class ManifestParser
                 // Inject filter directive.
 // TODO: OSGi R4.3 - Can we insert this on demand somehow?
                 Map<String, String> dirs = clause.m_dirs;
-                Map<String, String> newDirs = new HashMap<String, String>(dirs.size() + 1);
+                Map<String, String> newDirs = new HashMap<>(dirs.size() + 1);
                 newDirs.putAll(dirs);
                 newDirs.put(
                     Constants.FILTER_DIRECTIVE,
@@ -1863,14 +1852,14 @@ public class ManifestParser
         return result;
     }
 
-    private void parseActivationPolicy(Map<String, Object> headerMap)
+    private void parseActivationPolicy(Map<String, String> headerMap)
     {
         m_activationPolicy = BundleRevisionImpl.EAGER_ACTIVATION;
 
         List<ParsedHeaderClause> clauses = parseStandardHeader(
-            (String) headerMap.get(Constants.BUNDLE_ACTIVATIONPOLICY));
+            headerMap.get(Constants.BUNDLE_ACTIVATIONPOLICY));
 
-        if (clauses.size() > 0)
+        if ( !clauses.isEmpty() )
         {
             // Just look for a "path" matching the lazy policy, ignore
             // everything else.
@@ -1903,7 +1892,7 @@ public class ManifestParser
         String header = headers[0];
         if (header != null)
         {
-            if (header.length() == 0)
+            if ( header.isEmpty() )
             {
                 throw new IllegalArgumentException(
                     "A header cannot be an empty string.");
@@ -1942,7 +1931,7 @@ public class ManifestParser
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static List<ParsedHeaderClause> parseStandardHeader(String header)
     {
-        List<ParsedHeaderClause> clauses = new ArrayList<ParsedHeaderClause>();
+        List<ParsedHeaderClause> clauses = new ArrayList<>();
         if (header == null)
         {
             return clauses;
@@ -1965,10 +1954,10 @@ public class ManifestParser
             {
                 case CLAUSE_START:
                     clause = new ParsedHeaderClause(
-                            new ArrayList<String>(),
-                            new HashMap<String, String>(),
-                            new HashMap<String, Object>(),
-                            new HashMap<String, String>());
+                        new ArrayList<>(),
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        new HashMap<>());
                     clauses.add(clause);
                     state = PARAMETER_START;
                 case PARAMETER_START:
@@ -2107,7 +2096,7 @@ public class ManifestParser
            value = "";
         }
 
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
 
         int CHAR = 1;
         int DELIMITER = 2;
@@ -2198,14 +2187,14 @@ public class ManifestParser
     {
         if (libStrs == null)
         {
-            return new ArrayList<NativeLibraryClause>(0);
+            return new ArrayList<>(0);
         }
 
-        List<NativeLibraryClause> libList = new ArrayList<NativeLibraryClause>(libStrs.size());
+        List<NativeLibraryClause> libList = new ArrayList<>(libStrs.size());
 
-        for (int i = 0; i < libStrs.size(); i++)
+        for (String libStr : libStrs)
         {
-            NativeLibraryClause clause = NativeLibraryClause.parse(logger, libStrs.get(i));
+            NativeLibraryClause clause = NativeLibraryClause.parse(logger, libStr);
             libList.add(clause);
         }
 
@@ -2216,10 +2205,10 @@ public class ManifestParser
     {
         if (caps == null)
         {
-            return new ArrayList<BundleCapability>(0);
+            return new ArrayList<>(0);
         }
 
-        List<BundleCapability> aliasCaps = new ArrayList<BundleCapability>(caps);
+        List<BundleCapability> aliasCaps = new ArrayList<>(caps);
 
         String[] aliases = {
                 FelixConstants.SYSTEM_BUNDLE_SYMBOLICNAME,
@@ -2235,7 +2224,7 @@ public class ManifestParser
             {
                 // Make a copy of the attribute array.
                 Map<String, Object> aliasAttrs =
-                        new HashMap<String, Object>(cap.getAttributes());
+                    new HashMap<>(cap.getAttributes());
                 // Add the aliased value.
                 aliasAttrs.put(cap.getNamespace(), aliases);
                 // Create the aliased capability to replace the old capability.
@@ -2256,7 +2245,7 @@ public class ManifestParser
                 {
                     // Make a copy of the attribute array.
                     Map<String, Object> aliasAttrs =
-                            new HashMap<String, Object>(cap.getAttributes());
+                        new HashMap<>(cap.getAttributes());
                     // Add the aliased value.
                     aliasAttrs.put(Constants.BUNDLE_SYMBOLICNAME_ATTRIBUTE, aliases);
                     // Create the aliased capability to replace the old capability.

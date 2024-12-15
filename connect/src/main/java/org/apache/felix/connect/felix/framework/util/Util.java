@@ -618,7 +618,7 @@ public class Util
 
 
     private static final List EMPTY_LIST = Collections.unmodifiableList(Collections.EMPTY_LIST);
-    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.EMPTY_MAP);
+    private static final Map EMPTY_MAP = Collections.unmodifiableMap(Collections.emptyMap());
 
     public static <T> List<T> newImmutableList(List<T> list)
     {

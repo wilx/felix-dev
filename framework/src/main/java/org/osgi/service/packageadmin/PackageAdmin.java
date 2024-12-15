@@ -55,7 +55,7 @@ public interface PackageAdmin {
 	 *         {@code PackageAdmin} service.
 	 * @deprecated
 	 */
-	public ExportedPackage[] getExportedPackages(Bundle bundle);
+    ExportedPackage[] getExportedPackages(Bundle bundle);
 
 	/**
 	 * Gets the exported packages for the specified package name.
@@ -67,7 +67,7 @@ public interface PackageAdmin {
 	 * @since 1.2
 	 * @deprecated
 	 */
-	public ExportedPackage[] getExportedPackages(String name);
+    ExportedPackage[] getExportedPackages(String name);
 
 	/**
 	 * Gets the exported package for the specified package name.
@@ -83,7 +83,7 @@ public interface PackageAdmin {
 	 * @see #getExportedPackages(String)
 	 * @deprecated
 	 */
-	public ExportedPackage getExportedPackage(String name);
+    ExportedPackage getExportedPackage(String name);
 
 	/**
 	 * Forces the update (replacement) or removal of packages exported by the
@@ -149,7 +149,7 @@ public interface PackageAdmin {
 	 *         were not created by the same framework instance that registered
 	 *         this {@code PackageAdmin} service.
 	 */
-	public void refreshPackages(Bundle[] bundles);
+    void refreshPackages(Bundle[] bundles);
 
 	/**
 	 * Resolve the specified bundles. The Framework must attempt to resolve the
@@ -175,7 +175,7 @@ public interface PackageAdmin {
 	 *         this {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public boolean resolveBundles(Bundle[] bundles);
+    boolean resolveBundles(Bundle[] bundles);
 
 	/**
 	 * Returns an array of required bundles having the specified symbolic name.
@@ -191,7 +191,7 @@ public interface PackageAdmin {
 	 * @since 1.2
 	 * @deprecated
 	 */
-	public RequiredBundle[] getRequiredBundles(String symbolicName);
+    RequiredBundle[] getRequiredBundles(String symbolicName);
 
 	/**
 	 * Returns the bundles with the specified symbolic name whose bundle version
@@ -212,7 +212,7 @@ public interface PackageAdmin {
 	 *         {@code null} if no bundles are found.
 	 * @since 1.2
 	 */
-	public Bundle[] getBundles(String symbolicName, String versionRange);
+    Bundle[] getBundles(String symbolicName, String versionRange);
 
 	/**
 	 * Returns an array of attached fragment bundles for the specified bundle.
@@ -233,7 +233,7 @@ public interface PackageAdmin {
 	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public Bundle[] getFragments(Bundle bundle);
+    Bundle[] getFragments(Bundle bundle);
 
 	/**
 	 * Returns the host bundles to which the specified fragment bundle is
@@ -248,7 +248,7 @@ public interface PackageAdmin {
 	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public Bundle[] getHosts(Bundle bundle);
+    Bundle[] getHosts(Bundle bundle);
 
 	/**
 	 * Returns the bundle from which the specified class is loaded. The class
@@ -263,7 +263,7 @@ public interface PackageAdmin {
 	 *         this {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public Bundle getBundle(Class<?> clazz);
+    Bundle getBundle(Class<?> clazz);
 
 	/**
 	 * Bundle type indicating the bundle is a fragment bundle.
@@ -273,7 +273,7 @@ public interface PackageAdmin {
 	 * 
 	 * @since 1.2
 	 */
-	public static final int	BUNDLE_TYPE_FRAGMENT	= 0x00000001;
+    int	BUNDLE_TYPE_FRAGMENT	= 0x00000001;
 
 	/**
 	 * Returns the special type of the specified bundle. The bundle type values
@@ -296,5 +296,5 @@ public interface PackageAdmin {
 	 *         {@code PackageAdmin} service.
 	 * @since 1.2
 	 */
-	public int getBundleType(Bundle bundle);
+    int getBundleType(Bundle bundle);
 }

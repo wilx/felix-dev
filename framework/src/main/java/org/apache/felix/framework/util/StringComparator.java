@@ -29,7 +29,7 @@ public class StringComparator implements Comparator<String>
     {
         int n1 = s1.length();
         int n2 = s2.length();
-        int min = n1 < n2 ? n1 : n2;
+        int min = Math.min(n1, n2);
         for ( int i = 0; i < min; i++ )
         {
             char c1 = s1.charAt( i );

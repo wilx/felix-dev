@@ -117,10 +117,7 @@ public class EventDispatcherTest extends TestCase
         EasyMock.expectLastCall().andReturn(Boolean.TRUE).anyTimes();
         sr.isAssignableTo(b3, String.class.getName());
         EasyMock.expectLastCall().andReturn(Boolean.TRUE).anyTimes();
-        EasyMock.replay(new Object[]
-            {
-                sr
-            });
+        EasyMock.replay(sr);
 
         ServiceEvent event = new ServiceEvent(ServiceEvent.REGISTERED, sr);
 
@@ -143,14 +140,11 @@ public class EventDispatcherTest extends TestCase
         Bundle b = EasyMock.createNiceMock(Bundle.class);
         EasyMock.expect(b.getBundleContext()).andReturn(bc).anyTimes();
         b.getState();
-        EasyMock.expectLastCall().andReturn(Integer.valueOf(Bundle.ACTIVE)).anyTimes();
+        EasyMock.expectLastCall().andReturn(Bundle.ACTIVE).anyTimes();
 
         EasyMock.expect(bc.getBundle()).andReturn(b).anyTimes();
 
-        EasyMock.replay(new Object[]
-            {
-                bc, b
-            });
+        EasyMock.replay(bc, b);
 
         return b;
     }

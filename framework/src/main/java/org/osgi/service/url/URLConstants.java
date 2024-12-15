@@ -35,11 +35,11 @@ public interface URLConstants {
 	 * URLStreamHandlerService. The property's value is a protocol name or an
 	 * array of protocol names.
 	 */
-	public static final String	URL_HANDLER_PROTOCOL	= "url.handler.protocol";
+    String	URL_HANDLER_PROTOCOL	= "url.handler.protocol";
 	/**
 	 * Service property naming the MIME types serviced by a
 	 * java.net.ContentHandler. The property's value is a MIME type or an array
 	 * of MIME types.
 	 */
-	public static final String	URL_CONTENT_MIMETYPE	= "url.content.mimetype";
+    String	URL_CONTENT_MIMETYPE	= "url.content.mimetype";
 }

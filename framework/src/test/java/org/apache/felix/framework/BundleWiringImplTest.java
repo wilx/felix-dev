@@ -20,10 +20,8 @@ package org.apache.felix.framework;
 
 import org.apache.felix.framework.BundleWiringImpl.BundleClassLoader;
 import org.apache.felix.framework.cache.Content;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -57,9 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -94,10 +90,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -149,7 +145,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -184,12 +180,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -197,7 +193,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -256,12 +252,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -269,7 +265,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -327,12 +323,12 @@ public class BundleWiringImplTest
         ServiceReference<WeavingHook> mockServiceReferenceWeavingHook = mock(ServiceReference.class);
         ServiceReference<WovenClassListener> mockServiceReferenceWovenClassListener = mock(ServiceReference.class);
 
-        Set<ServiceReference<WeavingHook>> hooks = new HashSet<ServiceReference<WeavingHook>>();
+        Set<ServiceReference<WeavingHook>> hooks = new HashSet<>();
         hooks.add(mockServiceReferenceWeavingHook);
 
         DummyWovenClassListener dummyWovenClassListener = new DummyWovenClassListener();
 
-        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<ServiceReference<WovenClassListener>>();
+        Set<ServiceReference<WovenClassListener>> listeners = new HashSet<>();
         listeners.add(mockServiceReferenceWovenClassListener);
 
         Class testClass = TestClass.class;
@@ -340,7 +336,7 @@ public class BundleWiringImplTest
         String testClassAsPath = testClassName.replace('.', '/') + ".class";
         byte[] testClassBytes = createTestClassBytes(testClass, testClassAsPath);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         initializeSimpleBundleWiring();
 
@@ -421,7 +417,7 @@ public class BundleWiringImplTest
             verify(mockFramework).getBootPackages();
 
             //make sure the class is added to the skip class cache
-            assertEquals(getAccessorCache(bundleWiring).get(classToBeLoaded), BundleWiringImpl.CNFE_CLASS_LOADER);
+            assertEquals(BundleWiringImpl.CNFE_CLASS_LOADER, getAccessorCache(bundleWiring).get(classToBeLoaded));
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -438,8 +434,8 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -482,7 +478,7 @@ public class BundleWiringImplTest
             verify(requiredPkgs).values();
 
             //make sure the class is added to the skip class cache
-            assertEquals(getAccessorCache(bundleWiring).get(classToBeLoaded), BundleWiringImpl.CNFE_CLASS_LOADER);
+            assertEquals(BundleWiringImpl.CNFE_CLASS_LOADER, getAccessorCache(bundleWiring).get(classToBeLoaded));
         } catch (Exception e) {
             e.printStackTrace();
             fail();
@@ -569,7 +565,7 @@ public class BundleWiringImplTest
         BundleClassLoader notFoundClassLoader = mock(BundleClassLoader.class);
         BundleRevision bundleRevision1 = getBundleRevision(classToBeLoaded, foundClassLoader, String.class);
         BundleRevision bundleRevision2 = getBundleRevision(classToBeLoaded, notFoundClassLoader, null);
-        Map<String, BundleRevision> importedPkgsActual = new LinkedHashMap<String, BundleRevision>();
+        Map<String, BundleRevision> importedPkgsActual = new LinkedHashMap<>();
         importedPkgsActual.put("sun.reflect1", bundleRevision1);
         importedPkgsActual.put("sun.reflect2", bundleRevision2);
         when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
@@ -605,13 +601,7 @@ public class BundleWiringImplTest
     }
 
     private static <T> Answer<T> createAnswer(final T value) {
-        Answer<T> dummy = new Answer<T>() {
-            @Override
-            public T answer(InvocationOnMock invocation) throws Throwable {
-                return value;
-            }
-        };
-        return dummy;
+        return invocation -> value;
     }
 
     @Test
@@ -625,7 +615,7 @@ public class BundleWiringImplTest
 
         Map<String, BundleRevision> importedPkgs = mock(Map.class);
         BundleRevision bundleRevision1 = mock(BundleRevision.class);
-        Map<String, BundleRevision> importedPkgsActual = new HashMap<String, BundleRevision>();
+        Map<String, BundleRevision> importedPkgsActual = new HashMap<>();
         importedPkgsActual.put("sun.reflect1", bundleRevision1);
         when(importedPkgs.values()).thenReturn(importedPkgsActual.values());
         Map<String, List<BundleRevision>> requiredPkgs = mock(Map.class);
@@ -689,7 +679,7 @@ public class BundleWiringImplTest
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         BundleWiringImpl bundleWiring;
 
@@ -705,10 +695,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -739,19 +729,17 @@ public class BundleWiringImplTest
         assertTrue(bundleClassLoader.isParallel());
 
         final AtomicInteger loaded = new AtomicInteger();
-        new Thread() {
-            public void run() {
-                try
-                {
-                    loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                    loaded.set(3);
-                }
+        new Thread(() -> {
+            try
+            {
+                loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
             }
-        }.start();
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                loaded.set(3);
+            }
+        }).start();
 
         while (bundleClassLoader.m_gate.getQueueLength() == 0)
         {
@@ -759,19 +747,17 @@ public class BundleWiringImplTest
         }
 
         final AtomicInteger loaded2 = new AtomicInteger();
-        new Thread() {
-            public void run() {
-                try
-                {
-                    loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    e.printStackTrace();
-                    loaded2.set(3);
-                }
+        new Thread(() -> {
+            try
+            {
+                loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
             }
-        }.start();
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+                loaded2.set(3);
+            }
+        }).start();
 
         while (loaded2.get() == 0)
         {
@@ -782,19 +768,17 @@ public class BundleWiringImplTest
         assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
 
         loaded2.set(0);
-        Thread tester = new Thread() {
-            public void run() {
-                try
-                {
-                    loaded2.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    e.printStackTrace();
-                    loaded2.set(3);
-                }
+        Thread tester = new Thread(() -> {
+            try
+            {
+                loaded2.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
             }
-        };
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+                loaded2.set(3);
+            }
+        });
         tester.start();
 
         Thread.sleep(100);
@@ -823,37 +807,27 @@ public class BundleWiringImplTest
     public void testClassloadStress() throws Exception
     {
         ExecutorService executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
-        final List<Throwable> exceptionsNP = Collections.synchronizedList(new ArrayList<Throwable>());
-        final List<Throwable> exceptionsP = Collections.synchronizedList(new ArrayList<Throwable>());
+        final List<Throwable> exceptionsNP = Collections.synchronizedList(new ArrayList<>());
+        final List<Throwable> exceptionsP = Collections.synchronizedList(new ArrayList<>());
 
         for (int i = 0; i < 100; i++) {
-            executors.submit(i % 2 == 0 ? new Runnable()
-            {
-                @Override
-                public void run()
+            executors.submit(i % 2 == 0 ? () -> {
+                try
                 {
-                    try
-                    {
-                        testNotParallelClassload();
-                    }
-                    catch (Throwable e)
-                    {
-                        exceptionsNP.add(e);
-                    }
+                    testNotParallelClassload();
                 }
-            } : new Runnable()
-            {
-                @Override
-                public void run()
+                catch (Throwable e)
                 {
-                    try
-                    {
-                        testParallelClassload();
-                    }
-                    catch (Throwable e)
-                    {
-                        exceptionsP.add(e);
-                    }
+                    exceptionsNP.add(e);
+                }
+            } : () -> {
+                try
+                {
+                    testParallelClassload();
+                }
+                catch (Throwable e)
+                {
+                    exceptionsP.add(e);
                 }
             });
         }
@@ -886,7 +860,7 @@ public class BundleWiringImplTest
         final String testClassAsPath3 = testClassName3.replace('.', '/') + ".class";
         byte[] testClassBytes3 = createTestClassBytes(testClass3, testClassAsPath3);
 
-        List<Content> contentPath = new ArrayList<Content>();
+        List<Content> contentPath = new ArrayList<>();
         contentPath.add(mockContent);
         BundleWiringImpl bundleWiring;
 
@@ -902,10 +876,10 @@ public class BundleWiringImplTest
 
         Logger logger = new Logger();
         Map configMap = new HashMap();
-        List<BundleRevision> fragments = new ArrayList<BundleRevision>();
-        List<BundleWire> wires = new ArrayList<BundleWire>();
-        Map<String, BundleRevision> importedPkgs = new HashMap<String, BundleRevision>();
-        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<String, List<BundleRevision>>();
+        List<BundleRevision> fragments = new ArrayList<>();
+        List<BundleWire> wires = new ArrayList<>();
+        Map<String, BundleRevision> importedPkgs = new HashMap<>();
+        Map<String, List<BundleRevision>> requiredPkgs = new HashMap<>();
 
         when(mockRevisionImpl.getBundle()).thenReturn(mockBundle);
         when(mockBundle.getBundleId()).thenReturn(Long.valueOf(1));
@@ -936,19 +910,17 @@ public class BundleWiringImplTest
         assertFalse(bundleClassLoader.isParallel());
 
         final AtomicInteger loaded = new AtomicInteger();
-        new Thread() {
-            public void run() {
-                try
-                {
-                    loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                    loaded.set(3);
-                }
+        new Thread(() -> {
+            try
+            {
+                loaded.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
             }
-        }.start();
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                loaded.set(3);
+            }
+        }).start();
 
         while (bundleClassLoader.m_gate.getQueueLength() == 0)
         {
@@ -956,19 +928,17 @@ public class BundleWiringImplTest
         }
 
         final AtomicInteger loaded2 = new AtomicInteger();
-        new Thread() {
-            public void run() {
-                try
-                {
-                    loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    e.printStackTrace();
-                    loaded2.set(3);
-                }
+        new Thread(() -> {
+            try
+            {
+                loaded2.set(bundleClassLoader.findClass(testClassName3) != null ? 1 : 2);
             }
-        }.start();
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+                loaded2.set(3);
+            }
+        }).start();
 
         Thread.sleep(100);
 
@@ -977,19 +947,17 @@ public class BundleWiringImplTest
         assertEquals(1, bundleClassLoader.m_gate.getQueueLength());
 
         final AtomicInteger loaded3 = new AtomicInteger();
-        Thread tester = new Thread() {
-            public void run() {
-                try
-                {
-                    loaded3.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    e.printStackTrace();
-                    loaded3.set(3);
-                }
+        Thread tester = new Thread(() -> {
+            try
+            {
+                loaded3.set(bundleClassLoader.findClass(testClassName2) != null ? 1 : 2);
             }
-        };
+            catch (ClassNotFoundException e)
+            {
+                e.printStackTrace();
+                loaded3.set(3);
+            }
+        });
         tester.start();
 
         Thread.sleep(100);
@@ -1112,27 +1080,24 @@ public class BundleWiringImplTest
         {
             baos.write(curByte);
         }
-        byte[] testClassBytes = baos.toByteArray();
-        return testClassBytes;
+        return baos.toByteArray();
     }
 
-    @SuppressWarnings("rawtypes")
     private <T> T createBundleClassLoader(
             Class<T> bundleClassLoaderClass, BundleWiringImpl bundleWiring)
                     throws Exception
     {
         Logger logger = new Logger();
-        Constructor ctor = BundleRevisionImpl.getSecureAction().getConstructor(
+        Constructor<T> ctor = BundleRevisionImpl.getSecureAction().getConstructor(
                 bundleClassLoaderClass,
-                new Class[] { BundleWiringImpl.class, ClassLoader.class,
-                        Logger.class });
+            BundleWiringImpl.class, ClassLoader.class,
+            Logger.class);
         BundleRevisionImpl.getSecureAction().setAccesssible(ctor);
-        T bundleClassLoader = (T) BundleRevisionImpl
+        return BundleRevisionImpl
                 .getSecureAction().invoke(
                         ctor,
-                        new Object[] { bundleWiring,
-                                this.getClass().getClassLoader(), logger });
-        return bundleClassLoader;
+                        bundleWiring,
+                                this.getClass().getClassLoader(), logger );
     }
 
     class TestClass
@@ -1154,7 +1119,6 @@ public class BundleWiringImplTest
     {
         // Adds the awesomePublicField to a class
         @Override
-        @SuppressWarnings("unchecked")
         public void weave(WovenClass wovenClass)
         {
             byte[] wovenClassBytes = wovenClass.getBytes();
@@ -1173,7 +1137,6 @@ public class BundleWiringImplTest
     {
         // Adds the awesomePublicField twice to the class. This is bad java.
         @Override
-        @SuppressWarnings("unchecked")
         public void weave(WovenClass wovenClass)
         {
             byte[] wovenClassBytes = wovenClass.getBytes();
@@ -1202,7 +1165,7 @@ public class BundleWiringImplTest
 
     class DummyWovenClassListener implements WovenClassListener
     {
-        public List<Integer> stateList = new ArrayList<Integer>();
+        public List<Integer> stateList = new ArrayList<>();
 
         @Override
         public void modified(WovenClass wovenClass)

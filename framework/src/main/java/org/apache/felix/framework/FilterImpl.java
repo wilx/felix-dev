@@ -18,14 +18,6 @@
  */
 package org.apache.felix.framework;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.apache.felix.framework.ServiceRegistrationImpl.ServiceReferenceImpl;
 import org.apache.felix.framework.capabilityset.CapabilitySet;
 import org.apache.felix.framework.capabilityset.SimpleFilter;
@@ -35,6 +27,14 @@ import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleRevision;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class FilterImpl implements Filter
 {
@@ -52,7 +52,7 @@ public class FilterImpl implements Filter
         }
     }
 
-    public boolean match(ServiceReference sr)
+    public boolean match(ServiceReference<?> sr)
     {
         if (sr instanceof ServiceReferenceImpl)
         {
@@ -100,19 +100,19 @@ public class FilterImpl implements Filter
 
         public WrapperCapability(Map map)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-            m_map = (map == null) ? Collections.EMPTY_MAP : map;
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
+            m_map = (map == null) ? Collections.emptyMap() : map;
         }
 
         public WrapperCapability(Dictionary dict, boolean caseSensitive)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new DictionaryToMap(dict, caseSensitive);
         }
 
         public WrapperCapability(ServiceReference sr)
         {
-            super(null, null, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+            super(null, null, Collections.emptyMap(), Collections.emptyMap());
             m_map = new StringMap();
             for (String key : sr.getPropertyKeys())
             {

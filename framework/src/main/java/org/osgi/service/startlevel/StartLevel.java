@@ -44,7 +44,7 @@ import org.osgi.framework.Bundle;
  * When the Framework is first started it must be at start level zero. In this
  * state, no bundles are running. This is the initial state of the Framework
  * before it is launched.
- * 
+ * <p>
  * When the Framework is launched, the Framework will enter start level one and
  * all bundles which are assigned to start level one and whose autostart setting
  * indicates the bundle should be started are started as described in the
@@ -75,14 +75,14 @@ import org.osgi.framework.Bundle;
 public interface StartLevel {
 	/**
 	 * Return the active start level value of the Framework.
-	 * 
+	 * <p>
 	 * If the Framework is in the process of changing the start level this
 	 * method must return the active start level if this differs from the
 	 * requested start level.
 	 * 
 	 * @return The active start level value of the Framework.
 	 */
-	public int getStartLevel();
+    int getStartLevel();
 
 	/**
 	 * Modify the active start level of the Framework.
@@ -96,7 +96,7 @@ public interface StartLevel {
 	 * If the specified start level is higher than the active start level, the
 	 * Framework will continue to increase the start level until the Framework
 	 * has reached the specified start level.
-	 * 
+	 * <p>
 	 * At each intermediate start level value on the way to and including the
 	 * target start level, the Framework must:
 	 * <ol>
@@ -117,7 +117,7 @@ public interface StartLevel {
 	 * If the specified start level is lower than the active start level, the
 	 * Framework will continue to decrease the start level until the Framework
 	 * has reached the specified start level.
-	 * 
+	 * <p>
 	 * At each intermediate start level value on the way to and including the
 	 * specified start level, the framework must:
 	 * <ol>
@@ -145,7 +145,7 @@ public interface StartLevel {
 	 *         {@code AdminPermission[System Bundle,STARTLEVEL]} and the
 	 *         Java runtime environment supports permissions.
 	 */
-	public void setStartLevel(int startlevel);
+    void setStartLevel(int startlevel);
 
 	/**
 	 * Return the assigned start level value for the specified Bundle.
@@ -157,7 +157,7 @@ public interface StartLevel {
 	 *         the same framework instance that registered this
 	 *         {@code StartLevel} service.
 	 */
-	public int getBundleStartLevel(Bundle bundle);
+    int getBundleStartLevel(Bundle bundle);
 
 	/**
 	 * Assign a start level value to the specified Bundle.
@@ -194,7 +194,7 @@ public interface StartLevel {
 	 *         {@code AdminPermission[bundle,EXECUTE]} and the Java runtime
 	 *         environment supports permissions.
 	 */
-	public void setBundleStartLevel(Bundle bundle, int startlevel);
+    void setBundleStartLevel(Bundle bundle, int startlevel);
 
 	/**
 	 * Return the initial start level value that is assigned to a Bundle when it
@@ -203,7 +203,7 @@ public interface StartLevel {
 	 * @return The initial start level value for Bundles.
 	 * @see #setInitialBundleStartLevel(int)
 	 */
-	public int getInitialBundleStartLevel();
+    int getInitialBundleStartLevel();
 
 	/**
 	 * Set the initial start level value that is assigned to a Bundle when it is
@@ -232,7 +232,7 @@ public interface StartLevel {
 	 *         {@code AdminPermission[System Bundle,STARTLEVEL]} and the
 	 *         Java runtime environment supports permissions.
 	 */
-	public void setInitialBundleStartLevel(int startlevel);
+    void setInitialBundleStartLevel(int startlevel);
 
 	/**
 	 * Returns whether the specified bundle's autostart setting indicates the
@@ -251,7 +251,7 @@ public interface StartLevel {
 	 *         {@code StartLevel} service.
 	 * @see Bundle#START_TRANSIENT
 	 */
-	public boolean isBundlePersistentlyStarted(Bundle bundle);
+    boolean isBundlePersistentlyStarted(Bundle bundle);
 
 	/**
 	 * Returns whether the specified bundle's autostart setting indicates that
@@ -271,5 +271,5 @@ public interface StartLevel {
 	 * @since 1.1
 	 * @see Bundle#START_ACTIVATION_POLICY
 	 */
-	public boolean isBundleActivationPolicyUsed(Bundle bundle);
+    boolean isBundleActivationPolicyUsed(Bundle bundle);
 }

@@ -16,11 +16,11 @@
 
 package org.osgi.framework.dto;
 
-import java.util.Map;
-
 import org.osgi.dto.DTO;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+
+import java.util.Map;
 
 /**
  * Data Transfer Object for a ServiceReference.
@@ -53,7 +53,7 @@ public class ServiceReferenceDTO extends DTO {
 
     /**
 	 * The properties for the service.
-	 * 
+	 * <p>
 	 * The value type must be a numerical type, Boolean, String, DTO or an array
 	 * of any of the former.
 	 * 
