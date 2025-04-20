@@ -416,7 +416,7 @@ public final class WhiteboardManager
         if (context != null) {
             attributesForSharedContext.forEach((key, value) -> {
                 if (key != null && value != null) {
-                    SystemLogger.LOGGER.info("Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
+                    SystemLogger.LOGGER.info("WhiteboardManager: Shared context found, setting stored attribute key: '{}', value: '{}'", key, value);
                     context.setAttribute(key, value);
                 }
             });
@@ -726,13 +726,7 @@ public final class WhiteboardManager
                 }
                 else
                 {
-                    final ServletHandler servletHandler = new WhiteboardServletHandler(
-                        handler.getContextInfo().getServiceId(),
-                        servletContext,
-                        (ServletInfo)info,
-                        handler.getBundleContext(),
-                        info.getServiceReference().getBundle(),
-                        this.httpBundleContext.getBundle());
+                    final ServletHandler servletHandler = getServletHandler(handler, info, servletContext);
                     handler.getRegistry().registerServlet(servletHandler);
                 }
             }
@@ -803,6 +797,20 @@ public final class WhiteboardManager
         {
             this.failureStateHandler.addFailure(info, handler.getContextInfo().getServiceId(), FAILURE_REASON_UNKNOWN, e);
         }
+    }
+
+    @NotNull
+    private WhiteboardServletHandler getServletHandler(WhiteboardContextHandler handler,
+                                                       WhiteboardServiceInfo<?> info,
+                                                       ExtServletContext servletContext)
+    {
+        return new WhiteboardServletHandler(
+                handler.getContextInfo().getServiceId(),
+                servletContext,
+                (ServletInfo) info,
+                handler.getBundleContext(),
+                info.getServiceReference().getBundle(),
+                this.httpBundleContext.getBundle());
     }
 
     /**
@@ -981,7 +989,7 @@ public final class WhiteboardManager
      * @param value attribute value
      */
     public void setAttributeSharedServletContext(String key, Object value) {
-        SystemLogger.LOGGER.info("Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
+        SystemLogger.LOGGER.info("WhiteboardManager: Storing attribute for shared servlet context. Key '{}', value: '{}'", key, value);
         this.attributesForSharedContext.put(key, value);
     }
 }

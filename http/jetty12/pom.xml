@@ -26,11 +26,11 @@
         <relativePath>../../pom/pom.xml</relativePath>
     </parent>
 
-    <name>Apache Felix Http Jetty</name>
+    <name>Apache Felix Http Jetty 12.x</name>
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.19-SNAPSHOT</version>
+    <version>1.0.29-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.15</jetty.version>
+        <jetty.version>12.0.19</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -152,7 +152,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.9</version>
+                <version>6.0.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -213,7 +213,6 @@
                             org.osgi.service.http.context;version="[1.1,1.2)",
                             org.osgi.service.http.runtime;version="[1.1,1.2)",
                             org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
-                            org.slf4j;version="[1.0,3.0)",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -405,7 +404,6 @@
                                     org.osgi.service.http.context;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
-                                    org.slf4j;version="[1.0,3.0)",
                                     *
                                 </Import-Package>
                                 <DynamicImport-Package>
@@ -513,7 +511,6 @@
                                     org.osgi.service.http.context;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime;version="[1.1,1.2)",
                                     org.osgi.service.http.runtime.dto;version="[1.1,1.2)",
-                                    org.slf4j;version="[1.0,3.0)",
                                     *
                                 </Import-Package>
                                 <DynamicImport-Package>
@@ -594,6 +591,12 @@
     </build>
 
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -724,12 +727,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.8</version>
+            <version>5.1.13-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.wrappers</artifactId>
-            <version>1.1.6</version>
+            <version>6.1.0</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -740,7 +743,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.14.0</version>
+            <version>2.19.0</version>
         </dependency>
     <!-- Testing -->
         <dependency>
@@ -829,7 +832,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.13</version>
+            <version>2.0.17</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
