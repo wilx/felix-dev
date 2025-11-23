@@ -28,7 +28,7 @@
 
     <name>Apache Felix Http Base</name>
     <artifactId>org.apache.felix.http.base</artifactId>
-    <version>5.1.13-SNAPSHOT</version>
+    <version>5.1.17-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <scm>
@@ -68,6 +68,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Import-Package>jakarta.servlet.*;version="[6.0,7)", *</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -135,7 +136,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
+            <version>1.6.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -144,7 +145,7 @@
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
-    <!-- Testing -->
+        <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -154,13 +155,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
+            <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.ee10.websocket</groupId>
             <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
-            <version>12.0.16</version>
+            <version>12.0.30</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

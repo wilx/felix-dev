@@ -30,7 +30,7 @@
     <description>This is an implementation of the R8.1 OSGi Servlet Service, the R7 OSGi Http Service and the R7 OSGi Http Whiteboard Specification</description>
 
     <artifactId>org.apache.felix.http.jetty12</artifactId>
-    <version>1.0.29-SNAPSHOT</version>
+    <version>1.1.7-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <scm>
@@ -42,7 +42,7 @@
 
     <properties>
         <felix.java.version>17</felix.java.version>
-        <jetty.version>12.0.19</jetty.version>
+        <jetty.version>12.0.30</jetty.version>
         <baseline.skip>true</baseline.skip>
         <org.ops4j.pax.exam.version>4.13.3</org.ops4j.pax.exam.version>
         <!-- To debug the pax process, override this with -D -->
@@ -195,9 +195,6 @@
                             org.apache.felix.http.jetty.*,
                             org.eclipse.jetty.version
                         </Private-Package>
-                        <Conditional-Package>
-                            org.apache.commons.*
-                        </Conditional-Package>
                         <Import-Package>
                             sun.misc;resolution:=optional,
                             sun.nio.ch;resolution:=optional,
@@ -274,10 +271,6 @@
                             <instructions>
                                <Bundle-Name>${project.name} Light</Bundle-Name>
                                <Bundle-SymbolicName>${project.artifactId}.light</Bundle-SymbolicName>
-                               <!-- We need to override this from the base configuration -->
-                               <Conditional-Package>
-                                   foo
-                               </Conditional-Package>
                                <Export-Package>
                                     org.osgi.service.http,
                                     org.osgi.service.http.context,
@@ -385,9 +378,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -492,9 +482,6 @@
                                     org.apache.felix.http.jetty.*,
                                     org.eclipse.jetty.version
                                 </Private-Package>
-                                <Conditional-Package>
-                                    org.apache.commons.*
-                                </Conditional-Package>
                                 <Import-Package>
                                     org.eclipse.jetty.client;resolution:=optional,
                                     sun.misc;resolution:=optional,
@@ -727,7 +714,7 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.base</artifactId>
-            <version>5.1.13-SNAPSHOT</version>
+            <version>5.1.16</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -737,15 +724,9 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.5</version>
-            <optional>true</optional>
+            <version>1.6.0</version>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.19.0</version>
-        </dependency>
-    <!-- Testing -->
+    	<!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -755,7 +736,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
+            <version>5.17.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
